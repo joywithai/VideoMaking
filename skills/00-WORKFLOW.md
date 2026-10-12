@@ -4,22 +4,35 @@
 > তারপর তবে কোনো কাজ শুরু করবে। কোনো skill skip করা যাবে না।
 
 ## Agent-এর কাজ
-এই repo একটা **reusable video-making agent**। ইউজার প্রতিবার শুধু `videoDetails.txt` ভরে দেয়,
+এই repo একটা **reusable video-making agent**। ইউজার প্রতিবার শুধু `videoDetails.md` ভরে দেয়,
 বাকি সব — voiceover, SRT, motion-graphics video.html, thumbnails, upload metadata — agent নিজে বানায়।
+
+## ধাপ ০ — videoDetails.md তৈরি (কাজের আগে — ইউজার/প্রযোজনা AI)
+`videoDetails.md` আসে দুই পথে: ইউজার নিজে ভরে, অথবা রিপোতে `start` comment দিলে
+**টেক লবন প্রযোজনা AI** (`root/systemPrmpt.txt` system prompt দিয়ে) ইন্টারঅ্যাক্টিভ
+সেটআপ (MODE/category/count/duration/age/style) করে, স্ক্রিপ্ট+প্ল্যান বানিয়ে
+videoDetails.md draft দেয় → ইউজার যাচাই/edit করে "ok" দেয়।
+- প্রযোজনা AI-র output হুবহু videoDetails.md ফরম্যাট (১-৯ অংশ: সেটিংস, Script,
+  Scene Plan, Asset Plan, **Download List** ({topic} প্রিফিক্স নাম, watermark-ছাড়া),
+  Thumbnail Brief, Upload Brief, Growth, Extra Rules)।
+- Agent কাজ শুরুর আগে যাচাই করবে: script আছে, topic slug আছে, Download List-এর
+  ফাইল নামগুলো src/-এ আছে কিনা (না থাকলে ইউজারকে বলবে)।
 
 ## সম্পূর্ণ ধাপ (এই ক্রমেই, কোনো ধাপ বাদ নয়)
 
-1. **পড়ো** — `videoDetails.txt` পুরো মনোযোগ দিয়ে পড়ো। topic নাম, script, scene নির্দেশ,
-   src ব্যবহারের নির্দেশ, extra rules — সব নোট করো। কিছু অস্পষ্ট থাকলে কাজ শুরুর আগে জিজ্ঞাসা করো।
+1. **পড়ো** — `videoDetails.md` পুরো মনোযোগ দিয়ে পড়ো। topic slug, script, scene plan,
+   asset/download plan, thumbnail brief, upload brief, extra rules — সব নোট করো।
+   কিছু অস্পষ্ট থাকলে কাজ শুরুর আগে জিজ্ঞাসা করো।
 2. **পড়ো** — `skills/` এর সব .md (`00` থেকে `07`) + `skills/mistakes.md`।
    mistakes.md মানে "এই ভুলগুলো কোনোদিন কোরো না"।
 3. **প্রস্তুতি** — `materials/` ও `src/` যাচাই করো (কোন ছবি/gif/logo/script-নির্দিষ্ট অ্যাসেট আছে)।
-   videoDetails.txt-এ src-সম্পর্কিত নির্দেশ থাকলে সেগুলো mapping করো।
+   videoDetails.md-এর Download List/Asset Plan অনুযায়ী ছবি mapping করো
+   (নাম মিলিয়ে; যেগুলো নেই সেগুলোর জন্য ইউজারকে বলো বা AI-art/সাজানো ডিজাইন দাও)।
 4. **পরিবেশ** — `/home/user/.venv` না থাকে তৈরি করো:
    `python3 -m venv /home/user/.venv && /home/user/.venv/bin/pip install numpy soundfile pillow`
    (ffmpeg নেই; mp3 encode লাগলে `lameenc` ব্যবহার করো। সবসময় `/home/user/.venv/bin/python`।)
 5. **Script** — `output/{topic}Script.txt` বানাও (skill 02)।
-   videoDetails-এ script দেওয়া থাকলে সেটাই ব্যবহার করো, কখনো নিজে থেকে লেখা পাল্টে দেবে না।
+   videoDetails.md-এ script দেওয়া থাকলে সেটাই ব্যবহার করো, কখনো নিজে থেকে লেখা পাল্টে দেবে না।
 6. **Voiceover** — `output/{topic}Audio.mp3` (skill 01)। materials/NewsAudio.mp3-এর **একই কণ্ঠে**।
    প্রতিটা sentence/line আলাদা chunk-এ generate করো + chunk দৈর্ঘ্য সংরক্ষণ করো (skill 03)।
 7. **SRT** — `output/{topic}Audio.srt` (skill 02)। cue time আসবে chunk boundary থেকে (হুবহু exact)।
@@ -43,5 +56,5 @@
 ## নিয়ম
 - সব output যাবে `output/` তে, নাম `{topic}` prefix দিয়ে (skill 07)। অন্য কোথাও নয়।
 - মাঝপথে কোনো transform কখনো নিজের input file-এর উপর লিখবে না (mistakes.md #1)।
-- যেকোনো সিদ্ধান্ত যা skill-এ নেই এবং risky — আগে জিজ্ঞাসা করবে।
+- যেকোনো সিদ্ধান্ত যা skill-এ নেই এবং risky — আগে জিজ্ঞেস করবে।
 - কাজ শেষে সবসময় git commit + push (স্যান্ডবক্স রিসেট হলে কাজ যেন না হারায়)।
