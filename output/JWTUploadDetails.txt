@@ -1,0 +1,106 @@
+════════════════════════════════════════════════════════════════
+UPLOAD DETAILS — JWT Explainer Video
+════════════════════════════════════════════════════════════════
+
+
+──────────────────────────────────────────
+YOUTUBE
+──────────────────────────────────────────
+
+【 TITLE OPTIONS (3) 】
+
+1. JWT কীভাবে কাজ করে? | JSON Web Token সহজ ভাষায় বাংলা টিউটোরিয়াল
+
+2. JSON Web Token (JWT) সম্পূর্ণ গাইড বাংলায় — Header · Payload · Signature
+
+3. decode ≠ verify! JWT-এর গোপন সত্য | JWT Authentication Bangla Tutorial
+
+
+【 DESCRIPTION 】
+
+JWT কীভাবে কাজ করে? JSON Web Token সম্পর্কে যা কিছু জানা দরকার — সহজ, পরিষ্কার এবং সম্পূর্ণ বাংলা ভাষায়। এই ভিডিওটিতে আমরা ধাপে ধাপে বুঝব JWT বা JSON Web Token-এর গঠন, কার্যপ্রণালী, এনকোডিং, সিগনেচার, ভেরিফিকেশন এবং নিরাপত্তা সংক্রান্ত সেই সব গুরুত্বপূর্ণ বিষয়, যেগুলো না জেনে অনেক ডেভেলপারই প্রতিদিন ছোট ছোট কিন্তু বিপজ্জনক ভুল করে থাকে।
+
+আজকের ডিজিটাল জগতে authentication আর information exchange-এর জন্য JWT প্রায় সর্বত্রই ব্যবহৃত হয়। আপনি যদি কোনো web application, mobile app বা API-এর সাথে কাজ করেন, তাহলে প্রায় নিশ্চয়ই আপনার সামনে JWT এসেছে — হয়তো cookie-তে, হয়তো Authorization header-এ, কিংবা কোনো login system-এর ভেতরে। কিন্তু JWT-কে ঘিরে অনেক ভ্রান্ত ধারণাও ছড়িয়ে আছে। অনেকেই মনে করেন encode মানেই encrypt, decode করলেই verify হয়ে গেল, কিংবা token-এর ভেতরে যা লেখা সেটাই সত্য। এই ভিডিওটি সেই সব ভ্রান্ত ধারণা ভেঙে দেবে এবং আপনাকে JWT সম্পর্কে এমন একটা পরিষ্কার ধারণা দেবে, যেটা নিয়ে আপনি আত্মবিশ্বাসের সাথে কাজ করতে পারবেন।
+
+ভিডিওটিতে আমরা যা যা আলোচনা করেছি:
+
+• JWT বা JSON Web Token-এর পূর্ণ নাম এবং মূল পরিচিতি — এটা আসলে কী এবং কেন এটাকে compact format বলা হয়।
+• কীভাবে এক পক্ষ অন্য পক্ষের কাছে ছোট ছোট তথ্য বা claims পাঠাতে পারে — যেমন user-এর identifier, token কে তৈরি করেছে, token কোন application-এর জন্য এবং কখন expire করবে।
+• signed JWT-এর তিনটি অংশ — Header, Payload এবং Signature — এবং কীভাবে এই তিনটি অংশ একটি করে dot দিয়ে আলাদা করা হয়।
+• Header-এর গঠন — এটি একটি ছোট JSON object যার ভেতরে সাধারণত alg এবং typ থাকে, যেগুলো বলে দেয় token secure করার জন্য কোন algorithm ব্যবহার করা হয়েছে এবং token-এর type কী।
+• HS256-এর পরিচয় — HMAC-এর সঙ্গে SHA-256 ব্যবহার করে কীভাবে একটি shared secret দিয়ে sign এবং verify করা হয়।
+• Base64URL encoding — Base64-এর URL-safe variant, যেখানে plus এবং slash-এর বদলে hyphen ও underscore ব্যবহার করা হয় এবং শেষের padding রাখা হয় না।
+• encoding আর encryption-এর মূল পার্থক্য — কেন encoding মানে গোপন করা নয় এবং Base64URL encoding-এর ক্ষেত্রে তথ্য পড়তে কোনো secret key লাগে না।
+• Payload এবং claims — sub, role, iss, aud, exp, iat, nbf-এর মতো standard claims কীভাবে কাজ করে এবং Unix epoch seconds দিয়ে time-related claims কীভাবে প্রকাশ করা হয়।
+• signing input তৈরির ধাপ — encoded Header এবং encoded Payload-কে dot দিয়ে জোড়া লাগিয়ে কীভাবে সেই string-এর ওপর HMAC-SHA256 হিসাব করে Signature তৈরি হয়।
+• কেন Signature শুধু Payload-এর ওপর নয়, পুরো signing input-এর ওপরই তৈরি হয় এবং কেন secret key কখনো token-এর সঙ্গে পাঠানো হয় না।
+• shared secret বনাম asymmetric algorithm — private key দিয়ে sign এবং public key দিয়ে verify করার ধারণা।
+• সম্পূর্ণ signed JWT তৈরির পূর্ণ প্রক্রিয়া — encoded Header, encoded Payload এবং encoded Signature-কে dot দিয়ে যুক্ত করার সহজ ব্যাখ্যা।
+• token তৈরি হওয়া আর বিশ্বাসযোগ্য হওয়া কেন এক কথা নয় — এবং কেন server-এর শুধু Payload decode করে তথ্য বিশ্বাস করে ফেলা বিপজ্জনক।
+• server-এর সঠিক verification ধাপ — algorithm check, Signature verify, expected HMAC এবং received Signature মিলিয়ে দেখা।
+• Signature valid হলেই সব শর্ত পূরণ হয়ে যায় না — exp, iss, aud-এর মতো claims validation কেন আলাদাভাবে করতে হয়।
+• কেন নিজের হাতে verification না বানিয়ে ভালোভাবে maintained library ব্যবহার করা উচিত, এবং সেই library-কে সঠিক algorithm, key এবং claim-validation policy দিয়ে configure করা কতটা জরুরি।
+
+চলুন একটু ধাপে ধাপে বুঝে নিই JWT আসলে কীভাবে কাজ করে। ধরুন একটি user কোনো application-এ login করল। সার্ভার সেই user-এর তথ্য যাচাই করে, তারপর একটি JWT তৈরি করে এবং সেই token সেই user-এর client বা browser-এ ফেরত পাঠায়। সেই থেকে প্রতিবার user যখন কোনো protected route বা API call করে, তখন সেই token পাঠায়। সার্ভার সেই token এলে সরাসরি তথ্য বিশ্বাস না করে প্রথমে সম্পূর্ণ token যাচাই করে — Signature মিলছে কি না, token expire করেছে কি না, issuer এবং audience ঠিক আছে কি না। সবকিছু ঠিক থাকলে তবেই user-এর অনুরোধ গ্রহণ করা হয়। এই সম্পূর্ণ প্রক্রিয়াটাই JWT-এর মূল কাঠামো, এবং এই ভিডিওতে প্রতিটি ধাপ ভিজ্যুয়ালি দেখানো হয়েছে, যেন আপনি শুধু শুনে নয়, দেখে দেখে বুঝতে পারেন।
+
+JWT-এর প্রতিটি অংশের নিজস্ব একটা কাজ আছে। Header বলে দেয় token-টা কীভাবে secured — অর্থাৎ কোন algorithm দিয়ে সাইন করা হয়েছে। Payload-এ থাকে আসল তথ্য বা claims — যেমন user কে, কোন অ্যাপের জন্য, কতক্ষণ চলবে। আর Signature যাচাই করে এই দুটো অংশের তথ্য পথে কোথাও বদলে যায়নি তো। এই তিনটি অংশ একটি করে dot দিয়ে আলাদা করা থাকে, তাই token-টা দেখতে এমন: eyJhbGci... . eyJzdWIi... . a1b2c3...। প্রথম দুটো অংশ শুধু encode করা — পড়া যায়; তৃতীয় অংশটাই আসল নিরাপত্তা যোগ করে।
+
+JWT ব্যবহারের ক্ষেত্রগুলো অনেক বিস্তৃত। আজকাল প্রায় প্রতিটি modern web application-এর login system-এ JWT ব্যবহৃত হয়। Single sign-on বা SSO-তে JWT ছাড়া কাজ চলে না। Microservices-এ একটি service থেকে অন্য service-এ user-এর পরিচয় নিরাপদে পাঠাতে JWT ব্যবহার হয়। Mobile application এবং SPA বা single page application-এ API authentication-এর জন্য JWT সবচেয়ে জনপ্রিয় পছন্দ। এমনকি পেমেন্ট গেটওয়ে, মেসেজিং সিস্টেম এবং IoT device authentication-এও JWT-এর ব্যবহার দেখা যায়। অর্থাৎ JWT শুধু একটা টপিক নয়, এটা আপনার ডেভেলপার ক্যারিয়ারের সাথে প্রতিদিনের কাজে যুক্ত একটা বাস্তব দক্ষতা।
+
+এনক্রিপশন অ্যালগরিদম নিয়েও ভিডিওতে গুরুত্বপূর্ণ একটি আলোচনা আছে। HS256 হলো symmetric algorithm — একই shared secret দিয়ে সাইন এবং ভেরিফাই দুটোই করা হয়। এর অর্থ হলো যে পক্ষ verify করবে, তার কাছেও secret key থাকতে হবে। অন্যদিকে RS256-এর মতো asymmetric algorithm-এ একটি private key থাকে যা দিয়ে সাইন করা হয়, আর একটি public key থাকে যা দিয়ে যে কেউ verify করতে পারে। এই পার্থক্যটা বোঝা অত্যন্ত জরুরি, কারণ বাস্তব প্রজেক্টে কোন পরিস্থিতিতে কোন algorithm ব্যবহার করা উচিত, সেটা নির্ভর করে আপনার system-এর গঠনের ওপর। একটি monolithic application-এ HS256 যথেষ্ট ভালো কাজ করতে পারে; আর যেখানে একাধিক service বা third-party system verify করবে, সেখানে RS256 বেশি নমনীয় ও নিরাপদ হতে পারে।
+
+Token-এর একটা জীবনচক্রও আছে, যেটা বোঝা দরকার। একটি token তৈরি হয়, তারপর নির্দিষ্ট সময়ের জন্য বৈধ থাকে, তারপর expire হয়ে যায়। এই সময়সীমার মধ্যে token হারালে বা চুরি হলে কী করবেন, token কীভাবে refresh হবে, কোন পরিস্থিতিতে token invalid করতে হবে — এসব বাস্তব বিষয়েও আলোচনা করা হয়েছে। মনে রাখবেন, JWT-এর সবচেয়ে বড় সুবিধা এর simplicity এবং scalability; আর সবচেয়ে বড় দায়িত্ব হলো সঠিক verification এড়িয়ে যাওয়া যাবে না। প্রতিটি token এলে সেটা যাচাই করার নিয়মটা কখনো বাদ দেবেন না।
+
+এই ভিডিওটি দেখার পর আপনি যা যা শিখবেন: JWT-এর গঠন ও প্রতিটি অংশের দায়িত্ব, Base64URL encoding-এর কাজ, HMAC-SHA256 দিয়ে signing এবং verification-এর পূর্ণ প্রক্রিয়া, claims validation-এর গুরুত্ব, stateless authentication-এর ধারণা, এবং নিরাপদ কোডিং অভ্যাস। অর্থাৎ শুধু তত্ত্ব নয়, বাস্তব কাজে লাগবে এমন জ্ঞান। নতুন হলে নিশ্চিন্তে একবার নয়, দুইবার দেখুন — দ্বিতীয়বার দেখলে অনেক সূক্ষ্ম বিষয় আরও পরিষ্কার হয়ে যাবে।
+
+সাধারণ কিছু ভুল আছে যেগুলো এড়িয়ে চলা প্রতিটি ডেভেলপারের দায়িত্ব। প্রথমত, Payload-এর ভেতরে কখনো sensitive তথ্য যেমন password, secret key বা credit card number রাখবেন না — কারণ Payload encode করা থাকে, encrypt নয়; যে কেউ সেটা পড়তে পারে। দ্বিতীয়ত, token-এর algorithm নিজের মতো পরিবর্তন করার চেষ্টা করবেন না; অনেক সময় attacker algorithm বদলে none বা দুর্বল algorithm বসিয়ে দিতে চায়, তাই সার্ভারে অনুমোদিত algorithm-এর একটা সুনির্দিষ্ট তালিকা রাখুন। তৃতীয়ত, secret key কখনো client-এর কাছে বা token-এর ভেতরে পাঠাবেন না — key সবসময় সার্ভারে নিরাপদ থাকবে। চতুর্থত, token expire হলে সেটা বারবার গ্রহণ করবেন না; exp, nbf-এর মতো প্রতিটি claim আলাদা করে যাচাই করুন। এবং পঞ্চমত, নিজের হাতে verification logic লিখে ফেলবেন না — বদলে সময়ের সাথে পরীক্ষিত, ভালোভাবে maintained library ব্যবহার করুন এবং সেটাকে সঠিক policy দিয়ে configure করুন। এই ছোট ছোট অভ্যাসগুলোই আপনার application-কে অনেক বেশি নিরাপদ করে তোলে।
+
+JWT নিয়ে কাজ করার সময় সবচেয়ে বেশি যে দুটো ভুল ধারণা দেখা যায়, সেগুলো এই ভিডিওতে বিশেষভাবে তুলে ধরা হয়েছে। প্রথমটা — decode মানে verify নয়। যেকোনো ব্যক্তি token-এর Payload পড়তে পারে, কারণ সেটা encode করা থাকে, encrypt নয়। তাই Payload-এ যা আছে সেটা পড়া মাত্রই বিশ্বাস করে ফেলা উচিত নয়। আসল verification হলো Signature এবং প্রয়োজনীয় সব claims যাচাই করা। দ্বিতীয়টা — encoding মানে encryption নয়। এনকোডিং শুধু তথ্যকে অন্য representation-এ রূপান্তর করে, যেন সেটা নির্দিষ্ট জায়গায় নিরাপদে বহন করা যায়; অন্যদিকে encryption তথ্যকে গোপন রাখে। তাই JWT-এর ভেতরে কখনোই password বা secret key-এর মতো sensitive তথ্য রাখা উচিত নয়।
+
+এই টিউটোরিয়ালটি বিশেষভাবে তৈরি করা হয়েছে এমন সব দর্শকের জন্য যারা সফটওয়্যার ডেভেলপমেন্ট শিখছেন, backend development বা web development নিয়ে কাজ করছেন, authentication এবং authorization সম্পর্কে পরিষ্কার ধারণা চান, নিরাপদ API তৈরি করতে চান, কিংবা programming interview-এর প্রস্তুতি নিচ্ছেন। ভিডিওটির ভাষা সহজ, উদাহরণগুলো বাস্তব এবং পুরোটাই বাংলায় ব্যাখ্যা করা — তাই ইংরেজি প্রযুক্তিগত শব্দ না জানলেও আপনি সহজেই অনুসরণ করতে পারবেন। ইংরেজি টার্মগুলো ইচ্ছাকৃতভাবে অপরিবর্তিত রাখা হয়েছে, যেন আপনি আসল ডকুমেন্টেশন এবং কোডের সাথে পরিচিত হতে পারেন।
+
+প্রযুক্তির জগতে JWT-এর ব্যবহার দিন দিন বাড়ছে — login system, single sign-on, API security, microservices communication সব জায়গাতেই JWT-এর ভূমিকা আছে। তাই JWT সম্পর্কে শুধু আন্দাজ নয়, সঠিক ধারণা রাখা প্রতিটি ডেভেলপারের জন্য দরকারি। এই ভিডিও সেই সঠিক ধারণাটুকু আপনার হাতে তুলে দেবে।
+
+পরীক্ষা ও ইন্টারভিউ-এর দিক থেকেও JWT একটি অত্যন্ত জনপ্রিয় টপিক। সফটওয়্যার ইঞ্জিনিয়ারিং ইন্টারভিউতে প্রায়ই জিজ্ঞাসা করা হয় — JWT আর session-এর পার্থক্য কী? JWT-এর সুবিধা ও অসুবিধা কী? কেন JWT-কে stateless বলা হয়? Signature কীভাবে কাজ করে? encode আর encrypt-এর মধ্যে পার্থক্য কী? এই ভিডিওটি দেখার পর এই ধরনের প্রশ্নের উত্তর আপনি নিজের ভাষায় দিতে পারবেন। শুধু তাই নয়, বাস্তব প্রজেক্টে যখন authentication system ডিজাইন করবেন, তখন কোথায় JWT ব্যবহার করা যায়, কোথায় ব্যবহার করা ঠিক নয়, সেটাও আপনি বুঝতে পারবেন। উদাহরণস্বরূপ, যেখানে token দ্রুত invalidation প্রয়োজন বা যেখানে খুব বেশি sensitive কাজ হয়, সেখানে অতিরিক্ত সতর্কতা নেওয়া উচিত; আর যেখানে distributed system, multiple services বা third-party API-এর সাথে নিরাপদ তথ্য বিনিময় লাগে, সেখানে সঠিকভাবে ব্যবহার করলে JWT দারুণভাবে কাজ করে।
+
+কিছু সংক্ষিপ্ত প্রশ্নোত্তর, যেগুলো নতুনদের মনে প্রায়ই আসে:
+
+প্রশ্ন: JWT কি encrypt করা ডেটা? উত্তর: না। JWT-এর Header এবং Payload শুধু Base64URL encode করা থাকে — যে কেউ সহজেই পড়তে পারে। নিরাপত্তা আসে Signature থেকে, যেটা প্রমাণ করে তথ্য পরিবর্তন হয়নি।
+
+প্রশ্ন: তাহলে কি JWT নিরাপদ? উত্তর: সঠিকভাবে ব্যবহার করলে হ্যাঁ — Signature verify করা, claims validation করা, secret key গোপন রাখা এবং HTTPS-এর মাধ্যমে পাঠানো — এই নিয়মগুলো মেনে চললে JWT যথেষ্ট নিরাপদ।
+
+প্রশ্ন: JWT আর session cookie-এর পার্থক্য কী? উত্তর: session-এ সার্ভারে আলাদা করে স্টেট রাখতে হয়; JWT-তে token-এর ভেতরেই প্রয়োজনীয় তথ্য থাকে, তাই সার্ভারকে প্রতিবার ডাটাবেসে গিয়ে session খুঁজতে হয় না। তবে এর অর্থ নয় যে JWT সব জায়গার জন্যই সেরা — সিদ্ধান্তটা প্রজেক্টের প্রয়োজন অনুযায়ী নেওয়া উচিত।
+
+এই সব প্রশ্নের উত্তর এবং আরও অনেক কিছু সহজ উদাহরণের মাধ্যমে ব্যাখ্যা করা হয়েছে এই ভিডিওতে। পুরো ভিডিওটি সাজানো হয়েছে এমনভাবে যেন আপনি একটানা দেখলে পুরো গল্পটা পরিষ্কার হয়ে যায় — শুরু থেকে শেষ পর্যন্ত প্রতিটি ধাপ আগের ধাপের ওপর গড়ে উঠেছে।
+
+আরেকটি কথা মনে রাখুন — প্রযুক্তি শেখার ক্ষেত্রে মাতৃভাষার গুরুত্ব অপরিসীম। যে বিষয়টি আপনি নিজের ভাষায় গভীরভাবে বুঝেন, সেটি আপনার মনে দীর্ঘদিন থাকে এবং বাস্তব কাজে তা দ্রুত প্রয়োগ করতে পারেন। এই চ্যানেলের লক্ষ্যও ঠিক এটাই — জটিল প্রযুক্তিগত বিষয়গুলো এতটা সহজ ও দৃশ্যমান করে উপস্থাপন করা, যেন যে কেউ বসে বসে একবারে বুঝতে পারেন। ভিডিওটির প্রতিটি অ্যানিমেশন, প্রতিটি উদাহরণ এবং প্রতিটি শব্দ সাজানো হয়েছে আপনার বোঝার সুবিধার জন্য। তাই ধৈর্য নিয়ে দেখুন, নিজে নোট করুন, এবং প্রয়োজনে বন্ধুদের সাথে আলোচনা করুন — শেখা তখনই পূর্ণ হয় যখন সেটা ভাগাভাগি করা হয়।
+
+আপনার যদি JWT, authentication, web security বা programming সম্পর্কে কোনো প্রশ্ন থাকে, নিঃসংকোচ কমেন্টে লিখুন। আমরা নিয়মিতভাবে কমেন্ট পড়ি এবং পরবর্তী ভিডিওগুলোতে আপনাদের প্রশ্নের উত্তর দেওয়ার চেষ্টা করি। ভিডিওটি ভালো লাগলে লাইক করুন, যদি উপকারী মনে হয় তাহলে আপনার বন্ধু এবং সহকর্মীদের সাথে শেয়ার করুন, এবং এই ধরনের সহজ ভাষায় প্রযুক্তিগত টিউটোরিয়াল পেতে চ্যানেলটি subscribe করে বেল আইকনটি চালু রাখুন। আপনার একটি subscribe আমাদের আরও ভালো কন্টেন্ট তৈরি করতে অনুপ্রাণিত করে।
+
+মনে রাখবেন — token তৈরি হওয়া আর token বিশ্বাসযোগ্য হওয়া এক কথা নয়। প্রতিবার verify করুন, প্রতিবার যাচাই করুন। decode মানে verify নয়, আর encoding মানে encryption নয়। নিরাপদ থাকুন, সঠিকভাবে শিখুন এবং দায়িত্বশীলভাবে তৈরি করুন।
+
+শুভকামনা রইল আপনার ডেভেলপার জীবনের জন্য। আবার দেখা হবে পরবর্তী ভিডিওতে।
+
+#JWT #JSONWebToken #BanglaTech #WebDevelopment #Programming
+
+
+【 TAGS 】
+
+jwt, json web token, jwt bangla, jwt tutorial, jwt explained, what is jwt, jwt authentication, jwt token, json web token bangla, jwt tutorial bangla, jwt explained bangla, authentication bangla, token based authentication, stateless authentication, jwt vs session, session vs token, jwt security, web security bangla, api security, rest api security, secure api, backend development, backend bangla, web development bangla, programming bangla, coding bangla, software development, hs256, hmac sha256, base64url, base64url encoding, header payload signature, signed jwt, jwt claims, jwt exp iat nbf, asymmetric jwt, rs256, private key public key, public key cryptography, digital signature, decode vs verify, encoding vs encryption, oauth, oidc, single sign on, sso, login system, auth system, json, api, web token, security tutorial, developer bangla, tech tutorial bangla, প্রোগ্রামিং টিউটোরিয়াল বাংলা, ওয়েব ডেভেলপমেন্ট বাংলা, jwt কী, জেডব্লিউটি টিউটোরিয়াল, সফটওয়্যার ডেভেলপমেন্ট
+
+
+──────────────────────────────────────────
+FACEBOOK
+──────────────────────────────────────────
+
+【 TITLE 】
+
+JWT কীভাবে কাজ করে? — সহজ ভাষায় JSON Web Token (সম্পূর্ণ বাংলা গাইড)
+
+【 HASHTAGS (10) 】
+
+#JWT #JSONWebToken #WebDevelopment #Programming #BanglaTech #Authentication #CyberSecurity #Backend #WebSecurity #TechLobon
+
+【 TAGS (10) 】
+
+jwt, json web token, jwt bangla, authentication, web development, programming bangla, api security, backend development, web security, token

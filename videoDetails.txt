@@ -1,0 +1,29 @@
+# ═══════════════════════════════════════════════════════════════
+#  videoDetails.txt — প্রতিটা নতুন ভিডিওর জন্য এই ফাইলটি পূরণ করুন
+#  (পূরণ করার নিয়ম: যা না লাগবে সেটা খালি রাখুন/মুছে দিন)
+# ═══════════════════════════════════════════════════════════════
+
+[topic]
+# ছোট ইংরেজি slug — সব আউটপুট ফাইলের প্রিফিক্স হবে (উদাহরণ: JWT, PythonTips)
+# ফাইল নাম হবে: {topic}Audio.mp3, {topic}Video.html, {topic}Thumbnail_1.png ...
+JWT
+
+[script]
+# ① পুরো narration/script — এটাই ভয়েসওভার ও SRT-তে যাবে (হুবহু, পরিবর্তন নয়)।
+#    English tech term ইংরেজিই লিখুন। এক লাইন = এক বাক্য/এক cue।
+
+[scenes]
+# ② (ঐচ্ছিক) scene-by-scene নির্দেশনা — কোন লেখার সাথে কোন visual/card আসবে।
+#    উদাহরণ:
+#    Scene 1 (0:00-0:12): ৩টা গ্লাস কার্ড (Header/Payload/Signature) একসাথে আসবে
+#    Scene 2 (0:12-0:35): HS256 signature demo — machine panel কার্ড
+
+[src assets]
+# ③ src/ ফোল্ডারে যে ছবি/GIF/logo দিয়েছেন, কোনটা কোথায় ব্যবহার হবে।
+#    উদাহরণ:
+#    src/my_photo.png → thumbnail 1-এ subject হিসেবে
+#    src/demo.gif → video-র Scene 3-এ
+
+[extra rules]
+# ④ অতিরিক্ত নিয়ম — যেকোনো বিশেষ চাহিদা।
+#    উদাহরণ: "শুরুতে ৫ সেকেন্ড intro রাখো", "শেষে subscribe CTA card দাও"
