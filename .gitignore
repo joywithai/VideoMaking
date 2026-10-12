@@ -1,0 +1,4 @@
+# runtime-downloaded assets
+skills/tools/fonts/
+__pycache__/
+*.pyc

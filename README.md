@@ -1,117 +1,66 @@
-===========================================
-OUTPUT FOLDER — /productionReadyVideo/
-সম্পূর্ণ ডেলিভারেবল লিস্ট
-===========================================
+# 🎬 VideoMaking — AI Video Agent
 
-এই ফোল্ডারে এজেন্ট মোট ৫টা জিনিস output দেবে:
+এই রিপোজিটরি একটা **পুনঃব্যবহারযোগ্য AI video agent**। একবার সাজানো হয়েছে — এরপর প্রতিটা
+নতুন ভিডিওর জন্য শুধু `videoDetails.txt` পূরণ করলেই এজেন্ট পুরো প্যাকেজ তৈরি করে দেয়:
+ভয়েসওভার, SRT, HTML মোশন-গ্রাফিক্স ভিডিও, ৩টা থাম্বনেইল, এবং YouTube/Facebook upload details।
 
-📁 /productionReadyVideo/
-   ├── TechLobon_Final.mp4           (edited video)
-   ├── SEO_Title_Description.txt     (title + description)
-   ├── Thumbnail_Version1.png
-   ├── Thumbnail_Version2.png
-   └── Thumbnail_Version3.png
+## 🗂 গঠন
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FILE 1 — AUDIO RULE (IMPORTANT)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+VideoMaking/
+├── README.md            ← এই টিউটোরিয়াল
+├── videoDetails.txt     ← প্রতিটা ভিডিওর ইনপুট (আপনি এটি পূরণ করবেন)
+├── materials/           ← স্থায়ী উপাদান
+│   ├── BG.jpg              (ভিডিও/থাম্বনেইল ব্যাকগ্রাউন্ড)
+│   ├── NewsAudio.mp3       (voice reference — প্রতিটা ভিডিওতে এই একই কণ্ঠ)
+│   └── NewsScript.txt      (সেই voice sample-এর লেখা)
+├── src/                 ← প্রতিটা ভিডিওর নিজস্ব ছবি/GIF/logo (ঐচ্ছিক)
+├── skills/              ← এজেন্টের জ্ঞানভাণ্ডার (কাজের আগে সব পড়বে)
+│   ├── 00-WORKFLOW.md       (পুরো পাইপলাইন — ১৫ ধাপ)
+│   ├── 01-VOICE.md          (একই কণ্ঠে ভয়েসওভার)
+│   ├── 02-SCRIPT-SRT.md     (script ও SRT cue)
+│   ├── 03-AUDIO-ALIGN.md    (word-level timing)
+│   ├── 04-VIDEO-ENGINE.md   (HTML মোশন-গ্রাফিক্স — সম্পূর্ণ spec)
+│   ├── 05-THUMBNAILS.md     (৩টা থাম্বনেইল)
+│   ├── 06-UPLOAD-DETAILS.md (YouTube/Facebook metadata)
+│   ├── 07-OUTPUT-PACKAGING.md (ফাইলনাম/ডেলিভারি/চেকলিস্ট)
+│   ├── mistakes.md          (অতীত ভুল — কখনো পুনরাবৃত্তি হবে না; নতুন ভুল এখানেই যোগ হয়)
+│   ├── template-video.html  (ভিডিও ইঞ্জিন টেমপ্লেট)
+│   └── tools/               (align_words.py, validate_output.py, make_thumbnails.py)
+└── output/              ← ডেলিভারি ({topic} প্রিফিক্সসহ)
+    └── JWT...               (সম্পূর্ণ উদাহরণ প্যাকেজ — দেখে নিন কেমন আউটপুট আশা করা যায়)
+```
 
-RULE: /news/NewsAudio.mp3 হলো FINAL audio।
-      এটা কোনোভাবেই trim/cut/speed change/re-record 
-      করা যাবে না।
-      Video editing শুধু এই audio এর length এর 
-      সাথে match করে করতে হবে।
-      Video duration = Audio duration (exact same)
-      শুধু SFX/BGM যোগ হবে (ducking সহ), 
-      মূল voice track অপরিবর্তিত থাকবে।
+## 🚀 নতুন ভিডিও বানানোর ধাপ
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FILE 2 — SEO_Title_Description.txt
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. **`videoDetails.txt` পূরণ করুন:**
+   - `[topic]` — ছোট ইংরেজি slug (যেমন `JWT`, `PythonTips`) — সব ফাইলের প্রিফিক্স।
+   - `[script]` — পুরো narration (এটাই ভয়েস ও SRT-তে যাবে)।
+   - `[scenes]` — (ঐচ্ছিক) scene-by-scene নির্দেশনা।
+   - `[src assets]` — src/-এর কোন ফাইল কোথায় লাগবে।
+   - `[extra rules]` — যেকোনো বিশেষ চাহিদা।
+2. **প্রয়োজনীয় ছবি `src/`-এ দিন** (ঐচ্ছিক)।
+3. **এজেন্টকে বলুন:** "videoDetails.txt অনুযায়ী ভিডিও বানাও"।
+   এজেন্ট `skills/`-এর সব ফাইল পড়বে → কাজ করবে → `output/`-এ পূর্ণ প্যাকেজ দেবে →
+   নিজে যাচাই করবে → নতুন কোনো ভুল পেলে সাথে সাথে `skills/mistakes.md`-তে লিখে রাখবে।
+4. **ফলাফল:** `output/{topic}Audio.mp3`, `{topic}Audio.srt`, `{topic}Script.txt`,
+   `{topic}Video.html`, `{topic}Thumbnail_1/2/3.png`, `{topic}UploadDetails.txt`।
+   `{topic}Video.html` ব্রাউজারে খুলুন — প্লে চাপলে অডিওর সাথে সিঙ্ক মোশন-গ্রাফিক্স চলবে
+   (ভিডিও রেন্ডার করে আপলোড করুন, অথবা সরাসরি screen-record করুন)।
 
-এই txt ফাইলে থাকবে (ready to copy-paste format এ):
+## 📐 মান নিয়ম (সংক্ষেপে)
 
-SECTION A — TITLE OPTIONS:
-  🎯 TITLE A (সুপারিশকৃত)
-  [40-60 character viral title]
+- ভিজ্যুয়াল **বলা শব্দের সময়েই** আসবে (≤১ সেকেন্ড, লক্ষ্য ≤০.২সে)।
+- কোনো লেখা/এলিমেন্ট **একে অন্যের ওপর পড়বে না**; card-এর লেখা কখনো কিনারা ছোঁয়াবে/ছেঁড়া হবে না।
+- যে লেখার কোনো ভালো card নেই — সেটা নিচে word-by-word kinetic সাবটাইটেলে আসবে (কিছুই মিস নয়)।
+- **প্রতিটা ভিডিওতে একই কণ্ঠ** (materials/NewsAudio.mp3 অনুযায়ী)।
+- SRT-এর লেখা = script-এর লেখা (হুবহু); English tech term ইংরেজিই থাকবে।
+- থাম্বনেইল: ডার্ক BG, subject বামে, ডানে ২-লাইন bold লেখা (সাদা + কমলা)।
 
-  🎯 TITLE B (Alternative)
-  [40-60 character viral title]
+সব বিস্তারিত নিয়ম `skills/`-এ টপিক অনুযায়ী ভাগ করা আছে; অতীতের ভুলগুলো `skills/mistakes.md`-তে।
 
-SECTION B — FULL SEO DESCRIPTION (4000 শব্দের মধ্যে):
-  এই description এর মধ্যে থাকবে:
+## 🛠 টেকনোট (এজেন্টের জন্য)
 
-  ✅ Zone 1 — Power Hook (প্রথম ৩ লাইন keyword সহ)
-  ✅ Zone 2 — Video তে কী কী আছে (bullet points)
-  ✅ Zone 3 — Bangladesh Specific তথ্য (price/availability)
-  ✅ Zone 4 — Timestamps (audio duration অনুযায়ী calculate করা)
-  ✅ Zone 5 — Channel সম্পর্কে
-  ✅ Zone 6 — CTA (Subscribe/Like/Comment/Share)
-  ✅ Zone 7 — Social Media Links (placeholder)
-  ✅ Zone 8 — 35-40 SEO Tags (comma separated, ready to paste)
-  ✅ Zone 9 — 12-15 Hashtags
-  ✅ Zone 10 — Pinned Comment Suggestion (আলাদা করে লেখা)
-
-  DESCRIPTION_LENGTH_RULE:
-    মোট শব্দ সংখ্যা: 3500-4000 words এর মধ্যে
-    (YouTube description এর জন্য maximum useful length)
-    Keyword density natural রাখতে হবে (stuffing না)
-    সব keyword tier (Tier 1-5) cover করতে হবে
-
-  SEO_GOAL:
-    এই description যেন YouTube search এ 
-    "tech news bangla", "টেক নিউজ", এই ধরনের 
-    keyword এ top rank করতে পারে
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FILE 3, 4, 5 — THUMBNAILS (3 VARIATIONS)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-COMMON_RULES (সব ৩টাতে same থাকবে):
-  Base Image    : BG.jpg (same background ব্যবহার হবে, 
-                  কিন্তু আলাদা crop/zoom/edit দিয়ে ভিন্ন লাগবে)
-  Character     : News এর topic অনুযায়ী একটা relevant 
-                  character/icon/illustration বসবে
-                  (যেমন: AI news হলে robot character, 
-                  phone news হলে phone + emoji face, 
-                  company news হলে company logo + reaction face)
-  Color Scheme  : শুধু WHITE এবং RED রঙ ব্যবহার হবে 
-                  (text এবং highlight elements এর জন্য)
-  Caption Text  : ঠিক ২ লাইনের bold text
-                  Line 1: Hook word (বড় সাইজ)
-                  Line 2: Support word (একটু ছোট সাইজ)
-                  Color: White text with Red outline/stroke
-                  অথবা Red text with White outline (contrast strong রাখতে)
-  Font          : Bold, impactful Bangla font
-  Logo          : LOGO.png top-left corner এ same position এ
-  Resolution    : 1280x720px (YouTube standard thumbnail size)
-
-VARIATION_DIFFERENCE (৩টা কীভাবে আলাদা হবে):
-
-  🖼 THUMBNAIL VERSION 1 — "SHOCK STYLE"
-     Character Expression : চমকে যাওয়া/হতবাক face
-     Layout                : Character বাম পাশে, text ডান পাশে
-     Caption Line 1         : সবচেয়ে shocking শব্দ/সংখ্যা
-     Caption Line 2         : Support context শব্দ
-     Background Treatment   : BG.jpg এর উপর dark red tint overlay
-
-  🖼 THUMBNAIL VERSION 2 — "CURIOSITY STYLE"
-     Character Expression : প্রশ্নবোধক/চিন্তিত face
-     Layout                : Character ডান পাশে, text বাম পাশে
-     Caption Line 1         : Question format বা mystery hook
-     Caption Line 2         : "দেখুন ভিডিওতে" টাইপ teaser
-     Background Treatment   : BG.jpg এর উপর halka blur + zoom crop
-
-  🖼 THUMBNAIL VERSION 3 — "BOLD STATEMENT STYLE"
-     Character Expression : আত্মবিশ্বাসী/excited face
-     Layout                : Character center এ বড় করে, 
-                              text উপরে-নিচে split
-     Caption Line 1         : Direct bold claim/number
-     Caption Line 2         : Brand/category tag
-     Background Treatment   : BG.jpg অপরিবর্তিত, শুধু 
-                              red-white vignette border
-
-THUMBNAIL_SELECTION_NOTE:
-  তিনটাই একসাথে output ফোল্ডারে থাকবে।
-  ইউজার নিজে A/B/C টেস্ট করে বেছে নিতে পারবে 
-  কোনটা বেশি CTR পায়।
+- Python venv: `/home/user/.venv` (numpy, soundfile, lameenc, pillow) — বিস্তারিত `skills/00-WORKFLOW.md`।
+- যাচাই: `skills/tools/validate_output.py {topic}` — প্রতিটা build শেষে চালাতে হবে।
+- উদাহরণ প্যাকেজ `output/JWT*` — কাঠামো/মান মিলিয়ে দেখুন।
