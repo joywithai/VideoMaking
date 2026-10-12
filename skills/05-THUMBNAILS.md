@@ -11,7 +11,7 @@
 
 ## উপাদান
 1. **BG:** `materials/BG.jpg` → cover-crop, ঘুরিয়ে ধোঁয়াটে করো (brightness ≈0.36)।
-2. **Subject (বামে):** videoDetails/src থেকে ছবি থাকলে সেটা; না থাকলে AI-generate
+2. **Subject (বামে):** videoDetails.md-এর Download List/Asset Plan বা src/ থেকে ছবি থাকলে সেটা (ফাইল নাম মিলিয়ে); না থাকলে AI-generate
    (ডার্ক ব্যাকগ্রাউন্ড, কমলা rim light, **কোনো লেখা/অক্ষর নয়**, glass/neon tech object)।
    rounded/feather mask + কমলা glow দিয়ে বসাও (~৫০০px, বামে)।
 3. **লেখা (ডানে):** প্রতিটা থাম্বনেইলে আলাদা hook (৩টা variation) —
