@@ -1,7 +1,7 @@
 # 07 — OUTPUT PACKAGING: ফাইলনাম, ডেলিভারি, ফাইনাল চেকলিস্ট
 
 ## ফাইলনাম (কঠোর)
-সব কিছু `output/`-এ, `{topic}` প্রিফিক্সসহ (topic = videoDetails.txt `[topic]`, ছোট ইংরেজি slug):
+সব কিছু `output/`-এ, `{topic}` প্রিফিক্সসহ (topic = videoDetails.md-এর slug, ছোট ইংরেজি):
 
 ```
 output/{topic}Audio.mp3          # ভয়েসওভার
