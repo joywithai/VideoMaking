@@ -1,0 +1,3 @@
+duration=175.05s  cues=42  words=357  islands=391
+word dur avg=0.179s min=0.070s
+cue-start shift mean=0.296s max=1.048s

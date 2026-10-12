@@ -1,0 +1,29 @@
+chunks: 10  cues: 42
+  c01 cues  1-4  17.840s | silence lead 0.26s trail 0.33s
+  c02 cues  5-8  18.880s | silence lead 0.32s trail 0.31s
+  c03 cues  9-12 14.760s | silence lead 0.36s trail 0.23s
+  c04 cues 13-16 14.720s | silence lead 0.26s trail 0.39s
+  c05 cues 17-21 24.440s | silence lead 0.28s trail 0.29s
+  c06 cues 22-25 19.840s | silence lead 0.23s trail 0.34s
+  c07 cues 26-29 14.360s | silence lead 0.27s trail 0.33s
+  c08 cues 30-33 13.760s | silence lead 0.29s trail 0.47s
+  c09 cues 34-38 23.800s | silence lead 0.37s trail 0.35s
+  c10 cues 39-42 12.600s | silence lead 0.30s trail 0.36s
+concat total: 175.000s = 2:55 | 357 words -> 2.04 w/s
+mp3: output/AICodeAudio.mp3 (3419 KB, 160kbps mono 44.1kHz)
+  c01 islands=40 cue-ends(abs): 7.07 10.25 15.16
+  c02 islands=42 cue-ends(abs): 25.04 28.41 32.87
+  c03 islands=31 cue-ends(abs): 40.64 44.17 49.35
+  c04 islands=37 cue-ends(abs): 56.23 59.41 63.41
+  c05 islands=48 cue-ends(abs): 69.29 75.81 80.17 84.02
+  c06 islands=44 cue-ends(abs): 94.32 97.85 102.40
+  c07 islands=29 cue-ends(abs): 112.78 118.37 120.06
+  c08 islands=37 cue-ends(abs): 127.96 132.16 136.46
+  c09 islands=51 cue-ends(abs): 142.93 147.15 151.79 156.56
+  c10 islands=29 cue-ends(abs): 164.93 167.89 171.48
+srt: output/AICodeAudio.srt (42 cues)
+cue dur: mean=4.12s min=1.69s max=8.08s
+cue w/s: mean=2.13 min=1.48 max=2.96
+  hook(1-2): 10.1s = 0:10
+  news(3-39): 154.7s = 2:34
+  outro(40-42): 10.1s = 0:10
