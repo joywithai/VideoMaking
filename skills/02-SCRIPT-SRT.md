@@ -1,27 +1,31 @@
-# 02 — SCRIPT ও SRT: লেখা, cue split, টাইমিং
+# 05 — THUMBNAILS: ৩টা ক্লিক-টানা থাম্বনেইল
 
-## script.txt (`output/{topic}Script.txt`)
-- পুরো narration — videoDetails.txt-এর script অংশ হুবহু ব্যবহার করবে (নিজে থেকে পাল্টাবে না)।
-- English tech term ইংরেজিই থাকবে। এক লাইন = এক বাক্য/শ্বাস-গ্রুপ (cue-র সাথে মিলিয়ে)।
-- SRT-এর শব্দ = script-এর শব্দ (ক্রম হুবহু) — **কখনো প্যারাফ্রেজ নয়** (mistakes.md M10)।
+## স্টাইল (ইউজার reference — কঠোর)
+- ১২৮০×৭২০, ডার্ক ব্যাকগ্রাউন্ড, **subject বামে**, **ডানে ২-লাইন bold লেখা**
+  (লাইন ১ সাদা, লাইন ২ কমলা `#FF7A1A`), high contrast, সরল/পরিচ্ছন্ন।
+- লেখা: Hind Siliguri Bold (google/fonts থেকে `HindSiliguri-Bold.ttf` নামাও —
+  `api.github.com/repos/google/fonts/contents/ofl/hindsiliguri/HindSiliguri-Bold.ttf`,
+  Accept: `application/vnd.github.raw+json`)।
+- লেখা কখনো clip হবে না / কিনারা ছোঁয়াবে না — auto-fit (চওড়া মাপিয়ে font size কমাও),
+  stroke+shadow দিও।
 
-## cue split নিয়ম
-1. এক cue = এক বাক্য বা শ্বাস-গ্রুপ; সাধারণত ২–৭ সেকেন্ড, ~৪–২২ শব্দ।
-2. দীর্ঘ বাক্য হলে অর্থ-বিচ্ছিন্ন না করে কমায়/সংযোগে ভাগ করবে।
-3. Wrap: প্রতিটা cue সর্বোচ্চ ২ লাইন, লাইনপ্রতি ~৪৫ অক্ষর, ভারসাম্যপূর্ণ wrap
-   (এক লাইনে অর্ধেক কেটে দ্বিতীয় লাইনে ছোট টুকরো রাখবে না)।
-4. Cue সংখ্যা স্ক্রিপ্ট লাইন অনুযায়ী — JWT: ৭২টি।
+## উপাদান
+1. **BG:** `materials/BG.jpg` → cover-crop, ঘুরিয়ে ধোঁয়াটে করো (brightness ≈0.36)।
+2. **Subject (বামে):** videoDetails.md-এর Download List/Asset Plan বা src/ থেকে ছবি থাকলে সেটা (ফাইল নাম মিলিয়ে); না থাকলে AI-generate
+   (ডার্ক ব্যাকগ্রাউন্ড, কমলা rim light, **কোনো লেখা/অক্ষর নয়**, glass/neon tech object)।
+   rounded/feather mask + কমলা glow দিয়ে বসাও (~৫০০px, বামে)।
+3. **লেখা (ডানে):** প্রতিটা থাম্বনেইলে আলাদা hook (৩টা variation) —
+   বাংলা bold, লাইন ১ প্রশ্ন/কল, লাইন ২ topic keyword।
 
-## SRT (`output/{topic}Audio.srt`)
-- আদর্শ SRT: `n / HH:MM:SS,mmm --> HH:MM:SS,mmm / লেখা / খালি লাইন`।
-- **Cue time আসবে TTS chunk boundary থেকে** (skill 01 chunking) — এটাই সবচেয়ে নির্ভুল।
-  cue.s = chunk শুরু, cue.e = chunk শেষ (back-to-back concat হলে সঞ্চিত দৈর্ঘ্য)।
-- যদি chunk দৈর্ঘ্য না থাকে, তবে speech activity (VAD island) দিয়ে যাচাই/সংশোধন করবে
-  (skill 03) — কিন্তু cue সীমা বড়ভাবে নড়াবে না (M2)।
-- SRT লেখা = script লেখা; শেষ যাচাই: `output/{topic}Audio.srt` এর সব শব্দ মিলিয়ে দেখবে
-  `{topic}Script.txt`-এর সব শব্দের সাথে (সংখ্যা ও ক্রম)।
+## ৩টা hook প্যাটার্ন (প্রতিটা ভিডিওর জন্য নতুন করে, এই ঢঙে)
+1. প্রশ্ন/উদ্দীপনা: "X কীভাবে কাজ করে?" / "Header · Payload · Signature"
+2. আহ্বান: "নিজেই বুঝে ফেলো!" / "সহজ ভাষায় X"
+3. সত্য-ফাঁক: "decode ≠ verify!" / "X-এর গোপন সত্য!"
+
+## ফাইল
+`output/{topic}Thumbnail_1.png`, `_2.png`, `_3.png` (PNG, ১২৮০×৭২০)।
+`skills/tools/make_thumbnails.py` এই সব ধাপ automate করে (subject art পাথ + লেখা দাও)।
 
 ## যাচাই
-- cue সংখ্যা == script লাইন/বাক্য সংখ্যা।
-- প্রথম cue শুরু ≈ অডিও শুরু; শেষ cue শেষ ≈ অডিও শেষ।
-- `skills/tools/validate_output.py` চালাবে।
+আয়তন ১২৮০×৭২০; লেখা পরিষ্কার পড়া যায় (স্ক্রিনে নিজে দেখবে); কোনো লেখা বাইরে/ছেঁড়া নয়;
+৩টা আলাদা হুক।
