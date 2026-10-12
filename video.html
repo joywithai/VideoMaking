@@ -67,54 +67,52 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Hi
 .row{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;max-width:1760px}
 .mono{font-family:'JetBrains Mono',monospace}
 
-.pill{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:16px 32px;border-radius:999px;
-  font-size:30px;font-weight:600;color:#fff;line-height:1.35;text-align:center;max-width:1560px;
+.pill{display:inline-block;padding:18px 34px;border-radius:999px;
+  font-size:30px;font-weight:600;color:#fff;line-height:1.45;text-align:center;max-width:1560px;
   background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18)}
 .pill .k{color:var(--o2);font-weight:700}
 .pill.warn{background:rgba(255,107,0,.16);border-color:rgba(255,107,0,.45)}
 .pill.bad{background:rgba(255,60,60,.14);border-color:rgba(255,80,80,.4)}
 .pill.good{background:rgba(40,200,120,.13);border-color:rgba(60,220,140,.4)}
-.g\boxed{min-width:280px;max-width:380px;min-height:185px;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:10px;padding:26px 24px;border-radius:26px;text-align:center}
-.gbox .ic{font-size:46px;line-height:1.2}
-.gbox .t1{font-size:30px;font-weight:700;color:#fff;line-height:1.3;padding:0 6px;text-wrap:balance;overflow-wrap:break-word}
-.gbox .t2{font-size:20px;color:rgba(255,255,255,.68);line-height:1.4;padding:0 6px;text-wrap:balance;overflow-wrap:break-word}
+.gbox{min-width:280px;max-width:390px;min-height:196px;display:block;padding:32px 30px 34px;border-radius:26px;text-align:center}
+.gbox .ic{display:block;font-size:44px;line-height:1.15;margin:0 0 14px}
+.gbox .t1{display:block;font-size:30px;font-weight:700;color:#fff;line-height:1.4;margin:0 6px;text-wrap:balance;overflow-wrap:break-word}
+.gbox .t2{display:block;font-size:20px;color:rgba(255,255,255,.68);line-height:1.5;margin:12px 6px 2px;text-wrap:balance;overflow-wrap:break-word}
 .gbox.hot{background:rgba(255,107,0,.18);border:2px solid rgba(255,107,0,.5)}
-.tokenfly{padding:16px 30px;border-radius:18px;font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;
+.tokenfly{padding:20px 34px;border-radius:18px;font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;
   color:#fff;background:rgba(255,107,0,.28);border:2px solid rgba(255,107,0,.6);animation:fly 3.2s ease-in-out infinite}
 @keyframes fly{0%{transform:translateX(-110px) scale(.85);opacity:0}18%{opacity:1}50%{transform:translateX(0) scale(1);opacity:1}
   82%{opacity:1}100%{transform:translateX(110px) scale(.85);opacity:0}}
 .arrow{font-size:50px;color:var(--o);animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
-.code{padding:38px 46px;border-radius:28px;font-family:'JetBrains Mono',monospace;font-size:38px;line-height:1.8;color:#fff;min-width:500px}
+.code{padding:42px 50px;border-radius:28px;font-family:'JetBrains Mono',monospace;font-size:38px;line-height:1.8;color:#fff;min-width:500px}
 .code .key{color:#8ecbff}.code .str{color:var(--o2)}
 .wm{font-size:230px;font-weight:700;letter-spacing:10px;color:#fff;text-shadow:0 0 90px rgba(255,107,0,.5),0 18px 60px rgba(0,0,0,.6);display:flex;gap:12px}
 .wm .o{color:var(--o)}
-.bigtext{font-size:72px;font-weight:700;color:#fff;line-height:1.4;text-align:center;text-wrap:balance}
+.bigtext{font-size:72px;font-weight:700;color:#fff;line-height:1.5;text-align:center;text-wrap:balance}
 .bigtext b{color:var(--o2)}
-.slab{width:340px;height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-  border-radius:30px;padding:22px;text-align:center}
-.slab .num{font-size:19px;font-weight:700;color:var(--o2);letter-spacing:2px}
-.slab .name{font-size:46px;font-weight:700;color:#fff;line-height:1.2}
-.slab .hint{font-size:21px;color:rgba(255,255,255,.65);line-height:1.35;padding:0 8px}
+.slab{width:340px;min-height:250px;display:block;border-radius:30px;padding:34px 28px;text-align:center}
+.slab .num{display:block;font-size:19px;font-weight:700;color:var(--o2);letter-spacing:2px;margin:0 0 12px}
+.slab .name{display:block;font-size:46px;font-weight:700;color:#fff;line-height:1.25;margin:0}
+.slab .hint{display:block;font-size:21px;color:rgba(255,255,255,.65);line-height:1.5;margin:14px 6px 2px}
 .slab.on{background:rgba(255,107,0,.16);border:2px solid rgba(255,107,0,.5)}
 .dotsep{width:22px;height:22px;border-radius:50%;background:var(--o);box-shadow:0 0 26px rgba(255,107,0,.95);animation:blink 1.5s infinite;flex:none}
-.formula{padding:26px 48px;border-radius:22px;font-family:'JetBrains Mono',monospace;font-size:38px;color:#fff}
+.formula{padding:32px 52px;border-radius:22px;font-family:'JetBrains Mono',monospace;font-size:38px;color:#fff}
 .formula b{color:var(--o2)}
-.claim{padding:24px 30px;border-radius:22px;min-width:245px;text-align:center}
-.claim .c1{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--o2);line-height:1.25}
-.claim .c2{font-size:22px;color:rgba(255,255,255,.72);margin-top:6px;line-height:1.35;padding:0 4px}
+.claim{display:block;padding:28px 30px 30px;border-radius:22px;min-width:250px;text-align:center}
+.claim .c1{display:block;font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--o2);line-height:1.3}
+.claim .c2{display:block;font-size:22px;color:rgba(255,255,255,.72);margin:10px 6px 2px;line-height:1.5}
 .grid{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;max-width:1500px}
 .vs{display:flex;gap:36px;align-items:stretch;justify-content:center;flex-wrap:wrap}
-.vpanel{width:520px;padding:42px 48px;border-radius:30px;text-align:center}
-.vpanel .vt{font-size:42px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.25}
-.vpanel .vs2{font-size:26px;color:rgba(255,255,255,.72);line-height:1.7;padding:0 6px}
-.vpanel .ic{font-size:70px;margin-bottom:14px}
+.vpanel{width:520px;display:block;padding:44px 48px 46px;border-radius:30px;text-align:center}
+.vpanel .vt{display:block;font-size:42px;font-weight:700;color:#fff;margin:0 0 18px;line-height:1.3}
+.vpanel .vs2{display:block;font-size:26px;color:rgba(255,255,255,.72);line-height:1.75;margin:0 6px 2px}
+.vpanel .ic{display:block;font-size:70px;line-height:1.15;margin:0 0 16px}
 .neq{font-size:72px;font-weight:700;color:var(--o);align-self:center;text-shadow:0 0 40px rgba(255,107,0,.6);flex:none}
-.step{display:flex;align-items:center;gap:26px;padding:26px 34px;border-radius:22px;width:1080px;max-width:100%}
+.step{display:flex;align-items:center;gap:26px;padding:30px 36px 32px;border-radius:22px;width:1080px;max-width:100%}
 .step .chk{width:54px;height:54px;border-radius:16px;background:rgba(255,107,0,.2);border:2px solid var(--o);display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--o2);font-weight:700;flex:none}
-.step .txt{font-size:32px;color:#fff;font-weight:600;line-height:1.3}
-.step .txt small{display:block;font-size:21px;font-weight:500;color:rgba(255,255,255,.62);margin-top:5px;line-height:1.35}
+.step .txt{flex:1;font-size:32px;color:#fff;font-weight:600;line-height:1.4;padding:2px 8px 2px 0}
+.step .txt small{display:block;font-size:21px;font-weight:500;color:rgba(255,255,255,.62);margin-top:8px;line-height:1.5}
 .timelineWrap{position:relative;width:1320px;height:160px}
 .timeline{position:absolute;left:0;right:0;top:34px;height:8px;border-radius:999px;background:rgba(255,255,255,.18)}
 .tmark{position:absolute;top:0;transform:translateX(-50%);text-align:center;width:200px}
@@ -125,15 +123,14 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Hi
 .cross{position:relative}
 .cross::after{content:"✕";position:absolute;right:-8px;top:-12px;font-size:40px;color:#ff4d4d;font-weight:700;text-shadow:0 0 18px rgba(255,60,60,.8)}
 .okmark::after{content:"✓";position:absolute;right:-8px;top:-12px;font-size:40px;color:#28c878;font-weight:700;text-shadow:0 0 18px rgba(40,200,120,.8)}
-.machine{width:330px;height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-  border-radius:30px;padding:20px;text-align:center;
+.machine{width:340px;min-height:215px;display:block;border-radius:30px;padding:34px 26px;text-align:center;
   background:rgba(255,107,0,.16);border:2px solid rgba(255,107,0,.5);animation:machinePulse 2.2s ease-in-out infinite}
 @keyframes machinePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,0,.35)}50%{box-shadow:0 0 70px 12px rgba(255,107,0,.28)}}
-.machine .mt{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:#fff;line-height:1.2}
-.machine .ms{font-size:21px;color:rgba(255,255,255,.7);line-height:1.3}
-.minipart{padding:15px 26px;border-radius:16px;font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}
+.machine .mt{display:block;font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:#fff;line-height:1.3}
+.machine .ms{display:block;font-size:21px;color:rgba(255,255,255,.7);line-height:1.5;margin-top:12px}
+.minipart{padding:18px 28px;border-radius:16px;font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}
 .minipart.hot{background:rgba(255,107,0,.22);border-color:rgba(255,107,0,.55)}
-.pkg{width:180px;height:180px;display:flex;align-items:center;justify-content:center;font-size:90px;border-radius:32px}
+.pkg{width:180px;height:180px;display:flex;align-items:center;justify-content:center;font-size:90px;line-height:1;border-radius:32px}
 
 /* kinetic fallback subtitles (bottom band, per-line) */
 .kin{position:absolute;left:0;right:0;top:852px;text-align:center;padding:0 130px;min-height:150px}
@@ -661,6 +658,17 @@ audio.addEventListener('ended', () => {
   endOverlay.classList.remove('hidden');
 });
 function showErr(m){ errBox.textContent = m; errBox.style.display = 'block'; }
+
+/* self-heal: if any card's text overflows its box, grow the box (padding included) */
+function healCards(){
+  document.querySelectorAll('.gbox,.claim,.vpanel,.slab,.machine,.step,.pill,.code,.formula').forEach(c => {
+    const padB = parseFloat(getComputedStyle(c).paddingBottom) || 0;
+    const over = c.scrollHeight - c.clientHeight;
+    if(over > 1) c.style.paddingBottom = (padB + over + 12) + 'px';
+  });
+}
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(healCards);
+setTimeout(healCards, 120); setTimeout(healCards, 600);
 
 setBeat(0); tickBeat(); updateUI(0);
 </script>
