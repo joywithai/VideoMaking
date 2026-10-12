@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWT Explainer — Tech Lobon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --o:#FF6B00; --o2:#ff8c33;
+  --glass-bg:linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.035));
+  --glass-brd:1px solid rgba(255,255,255,.20);
+  --glass-sh:0 24px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Hind Siliguri','Noto Sans Bengali',sans-serif}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
+#stageArea{flex:1;position:relative;overflow:hidden;background:#000}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%);transform-origin:center;overflow:hidden;background:#0a0a0c}
+#playerBar{height:76px;flex:none;background:#0c0c0f;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:18px;padding:0 26px}
+
+.glass{background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+  border:var(--glass-brd);border-radius:28px;box-shadow:var(--glass-sh);position:relative;overflow:hidden}
+.glass::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;
+  background:linear-gradient(105deg, transparent, rgba(255,255,255,.14), transparent);transform:skewX(-18deg);pointer-events:none}
+.glass.shine::after{animation:shineSweep 6s ease-in-out infinite}
+@keyframes shineSweep{0%{left:-70%}55%{left:130%}100%{left:130%}}
+
+#bgWrap{position:absolute;inset:0;overflow:hidden}
+#bg{position:absolute;inset:-6%;background:url("BG.jpg") center/cover no-repeat;will-change:transform}
+#bg.kb-a{animation:kbA 26s ease-in-out infinite alternate}
+#bg.kb-b{animation:kbB 26s ease-in-out infinite alternate}
+#bg.kb-c{animation:kbC 26s ease-in-out infinite alternate}
+#bg.kb-d{animation:kbD 26s ease-in-out infinite alternate}
+@keyframes kbA{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.13) translate(-1.2%,-1.6%)}}
+@keyframes kbB{from{transform:scale(1.12) translate(2%,-.6%)}to{transform:scale(1.12) translate(-2%,.6%)}}
+@keyframes kbC{from{transform:scale(1.14) translate(-1%,1%)}to{transform:scale(1.03) translate(.4%,0)}}
+@keyframes kbD{from{transform:scale(1.06) translate(-2.2%,.8%)}to{transform:scale(1.14) translate(2.2%,-.8%)}}
+#tint{position:absolute;inset:0;background:
+  radial-gradient(1200px 700px at 50% 42%, rgba(255,107,0,.06), transparent 60%),
+  linear-gradient(180deg, rgba(5,5,8,.32) 0%, rgba(5,5,8,.05) 40%, rgba(5,5,8,.55) 100%)}
+#vignette{position:absolute;inset:0;box-shadow:inset 0 0 220px rgba(0,0,0,.75);pointer-events:none}
+#particles{position:absolute;inset:0;pointer-events:none}
+.dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);opacity:.16;animation:floatUp linear infinite}
+.dot.o{background:var(--o2);opacity:.22}
+@keyframes floatUp{from{transform:translateY(60px) scale(.7)}to{transform:translateY(-240px) scale(1.15)}}
+
+/* ================= beats ================= */
+#beats{position:absolute;inset:0;z-index:10}
+.beat{position:absolute;inset:0;opacity:0;visibility:hidden;pointer-events:none}
+.beat.active{opacity:1;visibility:visible;transition:opacity .45s ease}
+.beat.leaving{opacity:0;visibility:visible;transition:opacity .4s ease}
+.el{opacity:0;transform:translateY(26px);transition:opacity .38s ease, transform .38s cubic-bezier(.2,.85,.25,1)}
+.el.shown{opacity:1;transform:none}
+.el.pop{transform:scale(.72);transition:opacity .35s ease, transform .35s cubic-bezier(.2,1.5,.35,1)}
+.el.pop.shown{transform:scale(1)}
+.el.left{transform:translateX(-64px)}
+.el.right{transform:translateX(64px)}
+.el.left.shown,.el.right.shown{transform:translateX(0)}
+
+/* layout bands — overlap-safe zones */
+.btop{position:absolute;left:0;right:0;top:95px;display:flex;justify-content:center;align-items:flex-start;gap:30px;flex-wrap:wrap;min-height:150px}
+.bmid{position:absolute;left:0;right:0;top:290px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px;min-height:480px}
+.row{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;max-width:1740px}
+.mono{font-family:'JetBrains Mono',monospace}
+
+.pill{display:inline-flex;align-items:center;gap:12px;padding:14px 30px;border-radius:999px;font-size:30px;font-weight:600;color:#fff;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18)}
+.pill .k{color:var(--o2);font-weight:700}
+.pill.warn{background:rgba(255,107,0,.16);border-color:rgba(255,107,0,.45)}
+.pill.bad{background:rgba(255,60,60,.14);border-color:rgba(255,80,80,.4)}
+.pill.good{background:rgba(40,200,120,.13);border-color:rgba(60,220,140,.4)}
+.g\boxed{width:290px;min-height:165px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:22px;border-radius:26px;text-align:center}
+.gbox .ic{font-size:50px}
+.gbox .t1{font-size:33px;font-weight:700;color:#fff}
+.gbox .t2{font-size:21px;color:rgba(255,255,255,.65)}
+.gbox.hot{background:rgba(255,107,0,.18);border:2px solid rgba(255,107,0,.5)}
+.tokenfly{padding:16px 30px;border-radius:18px;font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;
+  color:#fff;background:rgba(255,107,0,.28);border:2px solid rgba(255,107,0,.6);animation:fly 3.2s ease-in-out infinite}
+@keyframes fly{0%{transform:translateX(-110px) scale(.85);opacity:0}18%{opacity:1}50%{transform:translateX(0) scale(1);opacity:1}
+  82%{opacity:1}100%{transform:translateX(110px) scale(.85);opacity:0}}
+.arrow{font-size:50px;color:var(--o);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+.code{padding:36px 44px;border-radius:28px;font-family:'JetBrains Mono',monospace;font-size:38px;line-height:1.8;color:#fff;min-width:500px}
+.code .key{color:#8ecbff}.code .str{color:var(--o2)}
+.wm{font-size:230px;font-weight:700;letter-spacing:10px;color:#fff;text-shadow:0 0 90px rgba(255,107,0,.5),0 18px 60px rgba(0,0,0,.6);display:flex;gap:12px}
+.wm .o{color:var(--o)}
+.bigtext{font-size:76px;font-weight:700;color:#fff;line-height:1.35;text-align:center}
+.bigtext b{color:var(--o2)}
+.slab{width:340px;height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:30px}
+.slab .num{font-size:19px;font-weight:700;color:var(--o2);letter-spacing:2px}
+.slab .name{font-size:46px;font-weight:700;color:#fff}
+.slab .hint{font-size:21px;color:rgba(255,255,255,.62)}
+.slab.on{background:rgba(255,107,0,.16);border:2px solid rgba(255,107,0,.5)}
+.dotsep{width:22px;height:22px;border-radius:50%;background:var(--o);box-shadow:0 0 26px rgba(255,107,0,.95);animation:blink 1.5s infinite;flex:none}
+.formula{padding:22px 44px;border-radius:22px;font-family:'JetBrains Mono',monospace;font-size:38px;color:#fff}
+.formula b{color:var(--o2)}
+.claim{padding:22px 30px;border-radius:22px;min-width:235px;text-align:center}
+.claim .c1{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--o2)}
+.claim .c2{font-size:23px;color:rgba(255,255,255,.72);margin-top:5px}
+.grid{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;max-width:1450px}
+.vs{display:flex;gap:36px;align-items:stretch;justify-content:center;flex-wrap:wrap}
+.vpanel{width:520px;padding:40px 46px;border-radius:30px;text-align:center}
+.vpanel .vt{font-size:42px;font-weight:700;color:#fff;margin-bottom:16px}
+.vpanel .vs2{font-size:26px;color:rgba(255,255,255,.72);line-height:1.6}
+.vpanel .ic{font-size:70px;margin-bottom:14px}
+.neq{font-size:72px;font-weight:700;color:var(--o);align-self:center;text-shadow:0 0 40px rgba(255,107,0,.6);flex:none}
+.step{display:flex;align-items:center;gap:26px;padding:22px 32px;border-radius:22px;width:1040px}
+.step .chk{width:54px;height:54px;border-radius:16px;background:rgba(255,107,0,.2);border:2px solid var(--o);display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--o2);font-weight:700;flex:none}
+.step .txt{font-size:32px;color:#fff;font-weight:600}
+.step .txt small{display:block;font-size:21px;font-weight:500;color:rgba(255,255,255,.62);margin-top:4px}
+.timelineWrap{position:relative;width:1300px;height:150px}
+.timeline{position:absolute;left:0;right:0;top:30px;height:8px;border-radius:999px;background:rgba(255,255,255,.18)}
+.tmark{position:absolute;top:0;transform:translateX(-50%);text-align:center;width:190px}
+.tmark i{display:block;width:20px;height:20px;border-radius:50%;background:var(--o);margin:24px auto 10px;box-shadow:0 0 18px rgba(255,107,0,.8)}
+.tmark span{font-family:'JetBrains Mono',monospace;font-size:25px;color:#fff;font-weight:700;display:block}
+.tmark small{font-size:19px;color:rgba(255,255,255,.6);display:block;margin-top:2px}
+.counter{font-family:'JetBrains Mono',monospace;font-size:110px;font-weight:700;color:var(--o2);text-shadow:0 0 60px rgba(255,107,0,.45)}
+.cross{position:relative}
+.cross::after{content:"✕";position:absolute;right:-8px;top:-12px;font-size:40px;color:#ff4d4d;font-weight:700;text-shadow:0 0 18px rgba(255,60,60,.8)}
+.okmark::after{content:"✓";position:absolute;right:-8px;top:-12px;font-size:40px;color:#28c878;font-weight:700;text-shadow:0 0 18px rgba(40,200,120,.8)}
+.machine{width:330px;height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:30px;
+  background:rgba(255,107,0,.16);border:2px solid rgba(255,107,0,.5);animation:machinePulse 2.2s ease-in-out infinite}
+@keyframes machinePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,0,.35)}50%{box-shadow:0 0 70px 12px rgba(255,107,0,.28)}}
+.machine .mt{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:#fff}
+.machine .ms{font-size:21px;color:rgba(255,255,255,.7)}
+.minipart{padding:15px 26px;border-radius:16px;font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}
+.minipart.hot{background:rgba(255,107,0,.22);border-color:rgba(255,107,0,.55)}
+.pkg{width:180px;height:180px;display:flex;align-items:center;justify-content:center;font-size:90px;border-radius:32px}
+
+/* kinetic fallback subtitles (bottom band, per-line) */
+.kin{position:absolute;left:0;right:0;top:850px;text-align:center;padding:0 130px;min-height:150px}
+.kw{display:inline-block;margin:0 9px;font-size:50px;font-weight:600;color:#fff;line-height:1.5;
+  text-shadow:0 3px 16px rgba(0,0,0,.75),0 0 3px rgba(0,0,0,.9)}
+.kw.shown{color:#fff}
+.kw.klast{color:var(--o2)}
+
+.overlay{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center}
+.overlay .card{width:820px;padding:64px 76px;border-radius:40px;text-align:center}
+.overlay h1{font-size:68px;color:#fff;font-weight:700;line-height:1.3}
+.overlay h1 b{color:var(--o2)}
+.overlay p{font-size:28px;color:rgba(255,255,255,.72);margin-top:18px;line-height:1.6}
+.bigbtn{margin-top:36px;display:inline-flex;align-items:center;gap:16px;padding:24px 58px;border-radius:999px;border:none;cursor:pointer;
+  font-family:inherit;font-size:36px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--o),var(--o2));
+  box-shadow:0 26px 70px rgba(255,107,0,.45);transition:transform .15s}
+.bigbtn:hover{transform:scale(1.05)}
+.hidden{display:none!important}
+
+.btn{width:48px;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);
+  color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.btn:hover{background:rgba(255,107,0,.4)}
+#time{font-family:'JetBrains Mono',monospace;font-size:19px;color:rgba(255,255,255,.85);flex:none;letter-spacing:1px}
+#track{flex:1;height:12px;border-radius:999px;background:rgba(255,255,255,.14);cursor:pointer;position:relative}
+#trackFill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--o),var(--o2));width:0%}
+#trackFill::after{content:"";position:absolute;right:-8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 0 4px rgba(255,107,0,.35)}
+#err{position:absolute;left:50%;top:30px;transform:translateX(-50%);z-index:70;padding:14px 26px;border-radius:14px;
+  background:rgba(180,20,20,.85);color:#fff;font-size:22px;display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stageArea">
+    <div id="stage">
+      <div id="bgWrap"><div id="bg" class="kb-a"></div></div>
+      <div id="tint"></div>
+      <div id="particles"></div>
+      <div id="vignette"></div>
+      <div id="beats"></div>
+      <div id="err"></div>
+    </div>
+    <div class="overlay" id="startOverlay">
+      <div class="card glass shine">
+        <h1>JWT — <b>JSON Web Token</b></h1>
+        <p>প্রতি line-এর word অনুযায়ী synced motion-graphics<br>clean board · Liquid Glass · SRT-accurate</p>
+        <button class="bigbtn" id="btnStart">▶ ভিডিও প্লে করো</button>
+      </div>
+    </div>
+    <div class="overlay hidden" id="endOverlay">
+      <div class="card glass shine">
+        <h1>সম্পূর্ণ ভিডিও শেষ ✅</h1>
+        <p>decode মানে verify নয় — Signature এবং claims যাচাই বাধ্যতামূলক</p>
+        <button class="bigbtn" id="btnAgain">⟲ আবার দেখো</button>
+      </div>
+    </div>
+  </div>
+  <div id="playerBar">
+    <div class="btn" id="btnPlay">▶</div>
+    <div class="btn" id="btnReplay">⟲</div>
+    <div id="time">0:00 / 0:00</div>
+    <div id="track"><div id="trackFill"></div></div>
+    <div class="btn" id="btnMute">🔊</div>
+  </div>
+</div>
+<audio id="audio" src="JWTAudio.mp3" preload="auto"></audio>
+
+<script>
+const DATA = {"duration":287.242,"cues":[{"s":0.05,"e":2.69,"lines":["JWT-এর পূর্ণ নাম JSON Web Token,"],"w":[["JWT-এর",0.1,0.77],["পূর্ণ",0.77,1.13],["নাম",1.13,1.365],["JSON",1.365,1.81],["Web",1.81,2.114],["Token,",2.114,2.67]]},{"s":2.71,"e":9.56,"lines":["আর এটি একটি compact format, যার মাধ্যমে এক","পক্ষ অন্য পক্ষের কাছে কিছু claims পাঠাতে পারে,"],"w":[["আর",2.76,2.93],["এটি",2.93,3.6],["একটি",3.6,3.774],["compact",3.774,4.38],["format,",4.38,4.93],["যার",4.93,5.66],["মাধ্যমে",5.66,6.254],["এক",6.254,6.71],["পক্ষ",6.71,6.77],["অন্য",6.765,6.9],["পক্ষের",6.9,7.57],["কাছে",7.57,7.77],["কিছু",7.77,8.09],["claims",8.09,8.81],["পাঠাতে",8.81,9.2],["পারে,",9.2,9.46]]},{"s":9.76,"e":13.22,"lines":["যেমন user-এর identifier, token কে তৈরি করেছে,"],"w":[["যেমন",9.81,10.023],["user-এর",10.023,10.473],["identifier,",10.473,11.87],["token",11.87,12.37],["কে",12.37,12.506],["তৈরি",12.506,12.728],["করেছে,",12.728,13.12]]},{"s":13.43,"e":14.35,"lines":["token কোন application-এর জন্য,"],"w":[["token",13.48,13.64],["কোন",13.64,13.88],["application-এর",13.88,14.161],["জন্য,",14.161,14.25]]},{"s":15.54,"e":17.65,"lines":["কিংবা token কখন expire করবে,"],"w":[["কিংবা",15.59,15.682],["token",15.682,16.1],["কখন",16.1,16.47],["expire",16.47,17.17],["করবে,",17.17,17.55]]},{"s":17.8,"e":20.79,"lines":["আর আমরা এখানে signed JWT নিয়ে কথা বলছি,"],"w":[["আর",17.85,18.219],["আমরা",18.219,18.729],["এখানে",18.729,19.27],["signed",19.27,19.632],["JWT",19.632,19.87],["নিয়ে",19.87,20.24],["কথা",20.24,20.4],["বলছি,",20.4,20.69]]},{"s":21.23,"e":22.47,"lines":["যার তিনটি অংশ থাকে — Header,"],"w":[["যার",21.28,21.364],["তিনটি",21.364,21.55],["অংশ",21.55,21.885],["থাকে",21.885,22.24],["—",22.24,22.3],["Header,",22.263,22.37]]},{"s":22.88,"e":28.38,"lines":["Payload এবং Signature, এই তিনটি অংশ","একটি করে dot দিয়ে আলাদা করা হয়,"],"w":[["Payload",22.93,23.66],["এবং",23.66,23.747],["Signature,",23.747,24.79],["এই",24.79,25.39],["তিনটি",25.39,25.62],["অংশ",25.62,25.976],["একটি",25.976,26.54],["করে",26.54,26.813],["dot",26.813,27.23],["দিয়ে",27.23,27.45],["আলাদা",27.45,27.755],["করা",27.755,27.975],["হয়,",27.975,28.28]]},{"s":28.54,"e":32.12,"lines":["তাই structure-টা দাঁড়ায় Header","dot Payload dot Signature,"],"w":[["তাই",28.59,28.65],["structure-টা",28.641,29.3],["দাঁড়ায়",29.3,30.09],["Header",30.09,30.77],["dot",30.77,30.905],["Payload",30.905,31.43],["dot",31.43,31.84],["Signature,",31.84,32.02]]},{"s":32.66,"e":35.99,"lines":["এবার প্রথমে Header দেখি,","এটি একটি ছোট JSON object,"],"w":[["এবার",32.71,32.84],["প্রথমে",32.84,33.62],["Header",33.62,34.12],["দেখি,",34.12,34.52],["এটি",34.52,34.86],["একটি",34.86,35.33],["ছোট",35.33,35.7],["JSON",35.7,35.772],["object,",35.772,35.89]]},{"s":36.23,"e":38.79,"lines":["এখানে সাধারণত alg এবং typ থাকে,"],"w":[["এখানে",36.28,37.15],["সাধারণত",37.15,37.32],["alg",37.32,38.07],["এবং",38.07,38.162],["typ",38.162,38.55],["থাকে,",38.55,38.69]]},{"s":39.07,"e":43.559999999999995,"lines":["alg বলে দেয় token secure করার জন্য","কোন algorithm ব্যবহার করা হয়েছে,"],"w":[["alg",39.12,39.46],["বলে",39.46,39.705],["দেয়",39.705,40.0],["token",40.0,40.51],["secure",40.51,40.76],["করার",40.76,41.4],["জন্য",41.4,41.68],["কোন",41.68,41.883],["algorithm",41.883,43.08],["ব্যবহার",43.08,43.63],["করা",43.63,44.125],["হয়েছে,",44.125,45.0]]},{"s":43.58,"e":46.09,"lines":["যেমন আমাদের উদাহরণে HS256,"],"w":[["যেমন",43.63,45.02],["আমাদের",45.02,45.23],["উদাহরণে",45.23,45.81],["HS256,",45.81,45.99]]},{"s":46.94,"e":50.68,"lines":["যার মানে HMAC-এর সঙ্গে","SHA-256 ব্যবহার করা হচ্ছে,"],"w":[["যার",46.99,47.315],["মানে",47.315,47.73],["HMAC-এর",47.73,48.11],["সঙ্গে",48.11,48.512],["SHA-256",48.512,49.42],["ব্যবহার",49.42,50.06],["করা",50.06,50.288],["হচ্ছে,",50.288,50.69]]},{"s":50.7,"e":54.339999999999996,"lines":["আর typ-এর value JWT হলে","বোঝায় token-এর type JWT,"],"w":[["আর",50.75,51.02],["typ-এর",51.02,51.6],["value",51.6,51.99],["JWT",51.99,52.59],["হলে",52.59,52.83],["বোঝায়",52.83,53.1],["token-এর",53.1,53.74],["type",53.74,54.41],["JWT,",54.41,55.25]]},{"s":54.36,"e":58.37,"lines":["তবে Header-এর ভেতরে কোনো secret key থাকে না,"],"w":[["তবে",54.41,55.34],["Header-এর",55.34,55.85],["ভেতরে",55.85,56.23],["কোনো",56.23,56.405],["secret",56.405,56.9],["key",56.9,57.57],["থাকে",57.57,57.995],["না,",57.995,58.42]]},{"s":58.39,"e":60.3,"lines":["শুধু algorithm সম্পর্কে তথ্য থাকে,"],"w":[["শুধু",58.44,58.5],["algorithm",58.485,59.41],["সম্পর্কে",59.41,59.75],["তথ্য",59.75,60.37],["থাকে,",60.37,61.53]]},{"s":60.32,"e":66.29,"lines":["এই Header JSON-কে UTF-8 bytes-এ","রূপান্তর করে Base64URL encode করা হয়,"],"w":[["এই",60.37,61.56],["Header",61.56,61.72],["JSON-কে",61.72,62.39],["UTF-8",62.39,62.95],["bytes-এ",62.95,63.56],["রূপান্তর",63.56,64.03],["করে",64.03,64.41],["Base64URL",64.41,65.14],["encode",65.14,65.68],["করা",65.68,66.05],["হয়,",66.05,66.34]]},{"s":66.31,"e":69.08,"lines":["আর এই encoded string-টাই token-এর প্রথম অংশ,"],"w":[["আর",66.36,66.7],["এই",66.7,66.799],["encoded",66.799,67.17],["string-টাই",67.17,68.3],["token-এর",68.3,69.15],["প্রথম",69.15,69.846],["অংশ,",69.846,70.39]]},{"s":69.1,"e":74.7,"lines":["এখানে মনে রাখা জরুরি যে encoding","আর encryption এক জিনিস নয়,"],"w":[["এখানে",69.15,70.41],["মনে",70.41,70.505],["রাখা",70.505,70.66],["জরুরি",70.66,71.12],["যে",71.12,71.25],["encoding",71.25,72.21],["আর",72.21,72.497],["encryption",72.497,73.668],["এক",73.668,73.955],["জিনিস",73.955,74.352],["নয়,",74.352,74.75]]},{"s":74.72,"e":78.44,"lines":["encoding তথ্যকে অন্য","representation-এ প্রকাশ করে,"],"w":[["encoding",74.77,75.08],["তথ্যকে",75.08,75.54],["অন্য",75.54,76.28],["representation-এ",76.28,77.82],["প্রকাশ",77.82,78.185],["করে,",78.185,78.47]]},{"s":78.46,"e":82.47,"lines":["কিন্তু encryption তথ্য গোপন","রাখার জন্য ব্যবহৃত হয়,"],"w":[["কিন্তু",78.51,78.87],["encryption",78.87,79.049],["তথ্য",79.049,80.38],["গোপন",80.38,80.59],["রাখার",80.59,80.91],["জন্য",80.91,81.348],["ব্যবহৃত",81.348,82.05],["হয়,",82.05,82.37]]},{"s":82.73,"e":87.67,"lines":["তাই Base64URL encoding-এর ক্ষেত্রে","তথ্য পড়তে কোনো secret key লাগে না,"],"w":[["তাই",82.78,82.987],["Base64URL",82.987,83.84],["encoding-এর",83.84,84.71],["ক্ষেত্রে",84.71,85.38],["তথ্য",85.38,85.59],["পড়তে",85.59,85.98],["কোনো",85.98,86.18],["secret",86.18,86.75],["key",86.75,87.0],["লাগে",87.0,87.285],["না,",87.285,87.57]]},{"s":87.94,"e":91.5,"lines":["Base64URL হলো Base64-এর URL-safe variant,"],"w":[["Base64URL",87.99,88.77],["হলো",88.77,88.969],["Base64-এর",88.969,89.703],["URL-safe",89.703,90.44],["variant,",90.44,91.48]]},{"s":91.52,"e":96.28,"lines":["যেখানে plus এবং slash-এর বদলে","hyphen ও underscore ব্যবহার করা হয়,"],"w":[["যেখানে",91.57,91.732],["plus",91.732,92.37],["এবং",92.37,92.451],["slash-এর",92.451,92.79],["বদলে",92.79,93.383],["hyphen",93.383,94.52],["ও",94.52,94.604],["underscore",94.604,95.19],["ব্যবহার",95.19,95.76],["করা",95.76,95.936],["হয়,",95.936,96.18]]},{"s":96.72,"e":98.61,"lines":["আর শেষের padding রাখা হয় না,"],"w":[["আর",96.77,97.043],["শেষের",97.043,97.5],["padding",97.5,97.998],["রাখা",97.998,98.169],["হয়",98.169,98.339],["না,",98.339,98.51]]},{"s":98.98,"e":102.19,"lines":["এবার আসি Payload-এ, এটিও একটি JSON object,"],"w":[["এবার",99.03,99.338],["আসি",99.338,99.63],["Payload-এ,",99.63,100.58],["এটিও",100.58,100.81],["একটি",100.81,101.12],["JSON",101.12,101.92],["object,",101.92,102.09]]},{"s":102.53,"e":106.23,"lines":["কিন্তু এখানে থাকে claims,","যেমন sub-এ user-এর identifier,"],"w":[["কিন্তু",102.58,102.675],["এখানে",102.675,102.79],["থাকে",102.79,103.51],["claims,",103.51,103.69],["যেমন",103.69,103.882],["sub-এ",103.882,104.5],["user-এর",104.5,105.193],["identifier,",105.193,106.25]]},{"s":106.25,"e":108.61,"lines":["role-এ application-এর role, iss-এ issuer,"],"w":[["role-এ",106.3,106.397],["application-এর",106.397,107.61],["role,",107.61,107.878],["iss-এ",107.878,108.146],["issuer,",108.146,108.51]]},{"s":108.85,"e":111.54,"lines":["এবং aud-এ intended audience রাখা যায়,"],"w":[["এবং",108.9,109.128],["aud-এ",109.128,109.64],["intended",109.64,110.51],["audience",110.51,111.61],["রাখা",111.61,112.013],["যায়,",112.013,112.57]]},{"s":111.56,"e":114.59,"lines":["sub হচ্ছে subject অর্থাৎ token কার সম্পর্কে,"],"w":[["sub",111.61,112.59],["হচ্ছে",112.59,112.709],["subject",112.709,113.37],["অর্থাৎ",113.37,113.9],["token",113.9,114.33],["কার",114.33,114.39],["সম্পর্কে,",114.375,114.49]]},{"s":115.08,"e":118.5,"lines":["iss হচ্ছে issuer অর্থাৎ কে token issue করেছে,"],"w":[["iss",115.13,115.53],["হচ্ছে",115.53,116.01],["issuer",116.01,116.19],["অর্থাৎ",116.19,116.78],["কে",116.78,116.931],["token",116.931,117.5],["issue",117.5,118.26],["করেছে,",118.26,118.4]]},{"s":118.66,"e":122.48,"lines":["aud হচ্ছে audience অর্থাৎ","token কোন recipient-এর জন্য,"],"w":[["aud",118.71,118.93],["হচ্ছে",118.93,119.08],["audience",119.08,119.75],["অর্থাৎ",119.75,120.38],["token",120.38,120.86],["কোন",120.86,121.009],["recipient-এর",121.009,122.18],["জন্য,",122.18,122.38]]},{"s":122.85,"e":125.08,"lines":["exp দিয়ে expiration time বোঝানো হয়,"],"w":[["exp",122.9,123.054],["দিয়ে",123.054,123.166],["expiration",123.166,124.1],["time",124.1,124.53],["বোঝানো",124.53,125.15],["হয়,",125.15,126.44]]},{"s":125.1,"e":128.56,"lines":["iat দিয়ে বোঝানো যায় token কখন issue হয়েছে,"],"w":[["iat",125.15,125.525],["দিয়ে",125.525,125.795],["বোঝানো",125.795,126.17],["যায়",126.17,126.87],["token",126.87,127.28],["কখন",127.28,127.671],["issue",127.671,128.34],["হয়েছে,",128.34,128.46]]},{"s":128.8,"e":133.76,"lines":["আর nbf দিয়ে বোঝানো যায় কোন","সময়ের আগে token গ্রহণ করা যাবে না,"],"w":[["আর",128.85,129.127],["nbf",129.127,129.53],["দিয়ে",129.53,129.614],["বোঝানো",129.614,130.07],["যায়",130.07,130.27],["কোন",130.27,130.84],["সময়ের",130.84,131.364],["আগে",131.364,131.73],["token",131.73,132.257],["গ্রহণ",132.257,132.75],["করা",132.75,132.81],["যাবে",132.81,132.89],["না,",132.89,133.81]]},{"s":133.78,"e":139.91,"lines":["এই time-related claims সাধারণত Unix epoch","থেকে গণনা করা seconds হিসেবে প্রকাশ করা হয়,"],"w":[["এই",133.83,133.89],["time-related",133.874,134.74],["claims",134.74,135.49],["সাধারণত",135.49,136.011],["Unix",136.011,136.439],["epoch",136.439,136.99],["থেকে",136.99,137.36],["গণনা",137.36,137.708],["করা",137.708,137.98],["seconds",137.98,138.41],["হিসেবে",138.41,139.05],["প্রকাশ",139.05,139.374],["করা",139.374,139.557],["হয়,",139.557,139.81]]},{"s":140.25,"e":143.14,"lines":["তবে সব claim প্রতিটি token-এ বাধ্যতামূলক নয়,"],"w":[["তবে",140.3,140.413],["সব",140.413,140.526],["claim",140.526,140.88],["প্রতিটি",140.88,141.35],["token-এ",141.35,142.23],["বাধ্যতামূলক",142.23,142.72],["নয়,",142.72,143.04]]},{"s":143.64,"e":147.98,"lines":["application-এর প্রয়োজন","অনুযায়ী এগুলো নির্বাচন করা হয়,"],"w":[["application-এর",143.69,145.42],["প্রয়োজন",145.42,145.807],["অনুযায়ী",145.807,146.125],["এগুলো",146.125,146.373],["নির্বাচন",146.373,147.21],["করা",147.21,147.541],["হয়,",147.541,148.0]]},{"s":148.0,"e":154.02,"lines":["আর Header-এর মতোই Payload-এর JSON-ও Base64URL","encode করে token-এর দ্বিতীয় অংশ তৈরি করা হয়,"],"w":[["আর",148.05,148.11],["Header-এর",148.103,148.63],["মতোই",148.63,148.921],["Payload-এর",148.921,149.777],["JSON-ও",149.777,150.51],["Base64URL",150.51,151.25],["encode",151.25,151.71],["করে",151.71,152.07],["token-এর",152.07,152.69],["দ্বিতীয়",152.69,153.23],["অংশ",153.23,153.387],["তৈরি",153.387,153.545],["করা",153.545,153.702],["হয়,",153.702,153.92]]},{"s":154.36,"e":157.86,"lines":["কিন্তু মনে রাখা দরকার,","encode করা মানে গোপন করা নয়,"],"w":[["কিন্তু",154.41,154.764],["মনে",154.764,155.04],["রাখা",155.04,155.141],["দরকার,",155.141,155.39],["encode",155.39,156.42],["করা",156.42,156.755],["মানে",156.755,157.12],["গোপন",157.12,157.355],["করা",157.355,157.525],["নয়,",157.525,157.76]]},{"s":158.08,"e":162.53,"lines":["তাই password বা secret key-এর মতো","sensitive তথ্য Payload-এ রাখা উচিত নয়,"],"w":[["তাই",158.13,158.19],["password",158.169,158.93],["বা",158.93,159.0],["secret",159.0,159.32],["key-এর",159.32,160.01],["মতো",160.01,160.142],["sensitive",160.142,160.93],["তথ্য",160.93,161.16],["Payload-এ",161.16,161.74],["রাখা",161.74,162.0],["উচিত",162.0,162.21],["নয়,",162.21,162.43]]},{"s":162.82,"e":169.29999999999998,"lines":["এবার encoded Header আর encoded Payload-কে একটি","dot দিয়ে জোড়া লাগিয়ে যে string তৈরি হয়,"],"w":[["এবার",162.87,162.963],["encoded",162.963,164.16],["Header",164.16,164.633],["আর",164.633,164.92],["encoded",164.92,165.32],["Payload-কে",165.32,166.17],["একটি",166.17,166.715],["dot",166.715,167.28],["দিয়ে",167.28,167.41],["জোড়া",167.41,167.56],["লাগিয়ে",167.56,167.92],["যে",167.92,168.35],["string",168.35,168.84],["তৈরি",168.84,169.033],["হয়,",169.033,169.3]]},{"s":169.32,"e":170.39,"lines":["সেটাই signing input,"],"w":[["সেটাই",169.37,169.43],["signing",169.409,169.98],["input,",169.98,170.41]]},{"s":170.41,"e":176.9,"lines":["HS256-এর ক্ষেত্রে এই signing input এবং একটি","secret key ব্যবহার করে HMAC-SHA256 হিসাব করা হয়,"],"w":[["HS256-এর",170.46,171.09],["ক্ষেত্রে",171.09,171.52],["এই",171.52,172.0],["signing",172.0,172.79],["input",172.79,173.172],["এবং",173.172,173.41],["একটি",173.41,173.512],["secret",173.512,173.96],["key",173.96,174.57],["ব্যবহার",174.57,174.754],["করে",174.754,175.14],["HMAC-SHA256",175.14,176.29],["হিসাব",176.29,176.477],["করা",176.477,176.613],["হয়,",176.613,176.8]]},{"s":177.05,"e":179.92999999999998,"lines":["আর সেই output-কে Base64URL","encode করলে তৈরি হয় Signature,"],"w":[["আর",177.1,177.219],["সেই",177.219,177.337],["output-কে",177.337,177.94],["Base64URL",177.94,178.84],["encode",178.84,179.56],["করলে",179.56,179.798],["তৈরি",179.798,180.0],["হয়",180.0,180.06],["Signature,",180.059,180.3]]},{"s":179.95,"e":184.15,"lines":["অর্থাৎ Signature শুধু Payload-এর ওপর নয়,"],"w":[["অর্থাৎ",180.0,181.74],["Signature",181.74,182.11],["শুধু",182.11,182.275],["Payload-এর",182.275,183.62],["ওপর",183.62,183.835],["নয়,",183.835,184.05]]},{"s":184.31,"e":186.72,"lines":["বরং পুরো signing input-এর ওপর তৈরি হয়,"],"w":[["বরং",184.36,184.51],["পুরো",184.51,184.72],["signing",184.72,185.6],["input-এর",185.6,185.97],["ওপর",185.97,186.15],["তৈরি",186.15,186.347],["হয়,",186.347,186.62]]},{"s":187.02,"e":190.24,"lines":["আর এই secret key কখনো","token-এর সঙ্গে পাঠানো হয় না,"],"w":[["আর",187.07,187.28],["এই",187.28,187.461],["secret",187.461,187.95],["key",187.95,188.29],["কখনো",188.29,188.59],["token-এর",188.59,189.41],["সঙ্গে",189.41,189.54],["পাঠানো",189.54,189.785],["হয়",189.785,189.963],["না,",189.963,190.14]]},{"s":190.59,"e":195.35,"lines":["HS256-এ token তৈরি এবং verify করার","জন্য একই shared secret ব্যবহার করা হয়,"],"w":[["HS256-এ",190.64,191.13],["token",191.13,191.52],["তৈরি",191.52,191.83],["এবং",191.83,191.89],["verify",191.884,192.41],["করার",192.41,192.59],["জন্য",192.59,193.07],["একই",193.07,193.324],["shared",193.324,193.81],["secret",193.81,194.49],["ব্যবহার",194.49,194.7],["করা",194.7,194.994],["হয়,",194.994,195.4]]},{"s":195.37,"e":201.07999999999998,"lines":["তবে asymmetric algorithm-এর ক্ষেত্রে private","key দিয়ে sign এবং public key দিয়ে verify করা"],"w":[["তবে",195.42,195.546],["asymmetric",195.546,196.08],["algorithm-এর",196.08,197.21],["ক্ষেত্রে",197.21,197.7],["private",197.7,198.6],["key",198.6,198.693],["দিয়ে",198.693,198.86],["sign",198.86,199.1],["এবং",199.1,199.54],["public",199.54,200.09],["key",200.09,200.43],["দিয়ে",200.43,200.503],["verify",200.503,200.76],["করা",200.76,201.06]]},{"s":201.1,"e":202.52,"lines":["হয়, এরপর encoded Header,"],"w":[["হয়,",201.15,201.427],["এরপর",201.427,201.81],["encoded",201.81,201.99],["Header,",201.99,202.42]]},{"s":202.8,"e":209.54,"lines":["encoded Payload এবং encoded Signature-কে dot","দিয়ে যুক্ত করলেই তৈরি হয়ে যায় সম্পূর্ণ signed"],"w":[["encoded",202.85,203.27],["Payload",203.27,203.419],["এবং",203.419,204.56],["encoded",204.56,205.18],["Signature-কে",205.18,206.0],["dot",206.0,206.22],["দিয়ে",206.22,206.581],["যুক্ত",206.581,207.11],["করলেই",207.11,207.32],["তৈরি",207.32,207.63],["হয়ে",207.63,208.06],["যায়",208.06,208.12],["সম্পূর্ণ",208.095,208.59],["signed",208.59,209.57]]},{"s":209.56,"e":211.79,"lines":["JWT, কিন্তু token তৈরি হওয়া আর","বিশ্বাসযোগ্য হওয়া এক কথা নয়,"],"w":[["JWT,",209.61,210.013],["কিন্তু",210.013,210.329],["token",210.329,210.86],["তৈরি",210.86,210.931],["হওয়া",210.931,211.4],["আর",211.4,211.466],["বিশ্বাসযোগ্য",211.466,211.86],["হওয়া",211.86,212.481],["এক",212.481,212.93],["কথা",212.93,213.379],["নয়,",213.379,214.0]]},{"s":211.81,"e":217.38,"lines":["কারণ server যদি শুধু Payload","decode করে তথ্য বিশ্বাস করে নেয়,"],"w":[["কারণ",211.86,214.09],["server",214.09,214.23],["যদি",214.23,214.39],["শুধু",214.39,214.94],["Payload",214.94,215.609],["decode",215.609,216.27],["করে",216.27,216.421],["তথ্য",216.421,216.68],["বিশ্বাস",216.68,216.81],["করে",216.81,217.06],["নেয়,",217.06,217.28]]},{"s":217.47,"e":220.89,"lines":["তাহলে verification-এর","মূল কাজটাই বাদ পড়ে যায়,"],"w":[["তাহলে",217.52,218.09],["verification-এর",218.09,219.41],["মূল",219.41,219.692],["কাজটাই",219.692,220.22],["বাদ",220.22,220.406],["পড়ে",220.406,220.592],["যায়,",220.592,220.85]]},{"s":220.91,"e":226.94,"lines":["তাই server প্রথমে নিজের configuration অনুযায়ী","অনুমোদিত algorithm ব্যবহার হচ্ছে কি না তা যাচাই"],"w":[["তাই",220.96,221.076],["server",221.076,221.74],["প্রথমে",221.74,222.37],["নিজের",222.37,222.43],["configuration",222.393,223.29],["অনুযায়ী",223.29,223.781],["অনুমোদিত",223.781,224.378],["algorithm",224.378,225.403],["ব্যবহার",225.403,226.06],["হচ্ছে",226.06,226.171],["কি",226.171,226.24],["না",226.24,226.52],["তা",226.52,226.662],["যাচাই",226.662,226.98]]},{"s":226.96,"e":227.41,"lines":["করে,"],"w":[["করে,",227.01,227.26]]},{"s":227.84,"e":230.78,"lines":["এরপর সঠিক key দিয়ে Signature verify করে,"],"w":[["এরপর",227.89,228.11],["সঠিক",228.11,228.56],["key",228.56,228.84],["দিয়ে",228.84,229.16],["Signature",229.16,230.37],["verify",230.37,230.571],["করে,",230.571,230.68]]},{"s":231.08,"e":237.6,"lines":["একই signing input থেকে expected HMAC হিসাব করে","এবং received Signature-এর সঙ্গে মিলিয়ে দেখে,"],"w":[["একই",231.13,231.32],["signing",231.32,232.13],["input",232.13,232.47],["থেকে",232.47,232.7],["expected",232.7,233.39],["HMAC",233.39,233.93],["হিসাব",233.93,234.49],["করে",234.49,234.55],["এবং",234.547,234.607],["received",234.603,235.12],["Signature-এর",235.12,236.792],["সঙ্গে",236.792,237.29],["মিলিয়ে",237.29,237.395],["দেখে,",237.395,237.5]]},{"s":237.79,"e":240.99,"lines":["তবে Signature valid হলেই","সব শর্ত পূরণ হয়ে যায় না,"],"w":[["তবে",237.84,238.093],["Signature",238.093,239.026],["valid",239.026,239.59],["হলেই",239.59,239.682],["সব",239.682,239.748],["শর্ত",239.748,240.06],["পূরণ",240.06,240.322],["হয়ে",240.322,240.511],["যায়",240.511,240.701],["না,",240.701,240.89]]},{"s":241.28,"e":243.37,"lines":["কারণ token expire করেছে কি না,"],"w":[["কারণ",241.33,241.447],["token",241.447,241.84],["expire",241.84,242.56],["করেছে",242.56,242.888],["কি",242.888,243.033],["না,",243.033,243.27]]},{"s":243.56,"e":246.26,"lines":["issuer প্রত্যাশিত কি না, audience সঠিক কি না,"],"w":[["issuer",243.61,244.09],["প্রত্যাশিত",244.09,244.56],["কি",244.56,244.69],["না,",244.69,244.767],["audience",244.767,245.36],["সঠিক",245.36,246.08],["কি",246.08,246.14],["না,",246.137,246.23]]},{"s":246.28,"e":251.62,"lines":["এসবও যাচাই করতে হয়, আর এই কারণেই নিজের","হাতে verification না বানিয়ে উপযুক্ত,"],"w":[["এসবও",246.33,247.01],["যাচাই",247.01,247.385],["করতে",247.385,247.78],["হয়,",247.78,247.855],["আর",247.855,247.99],["এই",247.99,248.098],["কারণেই",248.098,248.68],["নিজের",248.68,249.11],["হাতে",249.11,249.269],["verification",249.269,250.43],["না",250.43,250.578],["বানিয়ে",250.578,250.91],["উপযুক্ত,",250.91,251.52]]},{"s":251.8,"e":254.57,"lines":["maintained library ব্যবহার করা ভালো,"],"w":[["maintained",251.85,252.75],["library",252.75,253.401],["ব্যবহার",253.401,253.91],["করা",253.91,254.145],["ভালো,",254.145,254.47]]},{"s":254.77,"e":259.92,"lines":["যাকে সঠিক algorithm, key এবং claim-validation","policy দিয়ে configure করতে হয়,"],"w":[["যাকে",254.82,254.887],["সঠিক",254.887,255.0],["algorithm,",255.0,255.254],["key",255.254,256.55],["এবং",256.55,256.633],["claim-validation",256.633,258.16],["policy",258.16,258.605],["দিয়ে",258.605,258.81],["configure",258.81,259.32],["করতে",259.32,259.53],["হয়,",259.53,259.82]]},{"s":260.2,"e":264.02,"lines":["সবশেষে মনে রাখা দরকার, Header","বলে দেয় token কীভাবে secured,"],"w":[["সবশেষে",260.25,260.47],["মনে",260.47,260.716],["রাখা",260.716,260.961],["দরকার,",260.961,261.52],["Header",261.52,262.14],["বলে",262.14,262.535],["দেয়",262.535,262.99],["token",262.99,263.15],["কীভাবে",263.15,263.36],["secured,",263.36,263.92]]},{"s":264.62,"e":268.55,"lines":["Payload রাখে claims, Signature","দিয়ে integrity যাচাই করা যায়,"],"w":[["Payload",264.67,265.27],["রাখে",265.27,265.33],["claims,",265.306,266.18],["Signature",266.18,266.87],["দিয়ে",266.87,267.056],["integrity",267.056,267.746],["যাচাই",267.746,268.005],["করা",268.005,268.191],["যায়,",268.191,268.45]]},{"s":268.73,"e":272.99,"lines":["আর claims validation বলে দেয়","token এই মুহূর্তে গ্রহণযোগ্য কি না,"],"w":[["আর",268.78,268.84],["claims",268.828,269.01],["validation",269.01,270.166],["বলে",270.166,270.79],["দেয়",270.79,270.85],["token",270.838,271.21],["এই",271.21,271.376],["মুহূর্তে",271.376,271.72],["গ্রহণযোগ্য",271.72,272.42],["কি",272.42,272.56],["না,",272.56,272.89]]},{"s":273.5,"e":276.37,"lines":["অর্থাৎ decode করা মানে verify করা নয়,"],"w":[["অর্থাৎ",273.55,274.13],["decode",274.13,274.67],["করা",274.67,274.899],["মানে",274.899,275.128],["verify",275.128,275.73],["করা",275.73,275.956],["নয়,",275.956,276.27]]},{"s":276.54,"e":281.59,"lines":["আর encoding মানে encryption নয়","— signed JWT-এর তথ্য পড়া গেলেও,"],"w":[["আর",276.59,276.81],["encoding",276.81,277.72],["মানে",277.72,277.78],["encryption",277.759,279.05],["নয়",279.05,279.253],["—",279.253,279.378],["signed",279.378,279.894],["JWT-এর",279.894,280.46],["তথ্য",280.46,280.85],["পড়া",280.85,281.081],["গেলেও,",281.081,281.49]]},{"s":281.72,"e":286.53,"lines":["সেটা বিশ্বাস করার আগে Signature এবং","প্রয়োজনীয় claims অবশ্যই যাচাই করতে হয়।"],"w":[["সেটা",281.77,282.023],["বিশ্বাস",282.023,282.5],["করার",282.5,282.632],["আগে",282.632,282.728],["Signature",282.728,283.36],["এবং",283.36,284.34],["প্রয়োজনীয়",284.34,284.62],["claims",284.62,285.41],["অবশ্যই",285.41,285.94],["যাচাই",285.94,286.31],["করতে",286.31,286.37],["হয়।",286.37,286.43]]}],"words":[["JWT-এর",0.1,0.77,0],["পূর্ণ",0.77,1.13,0],["নাম",1.13,1.365,0],["JSON",1.365,1.81,0],["Web",1.81,2.114,0],["Token,",2.114,2.67,0],["আর",2.76,2.93,1],["এটি",2.93,3.6,1],["একটি",3.6,3.774,1],["compact",3.774,4.38,1],["format,",4.38,4.93,1],["যার",4.93,5.66,1],["মাধ্যমে",5.66,6.254,1],["এক",6.254,6.71,1],["পক্ষ",6.71,6.77,1],["অন্য",6.765,6.9,1],["পক্ষের",6.9,7.57,1],["কাছে",7.57,7.77,1],["কিছু",7.77,8.09,1],["claims",8.09,8.81,1],["পাঠাতে",8.81,9.2,1],["পারে,",9.2,9.46,1],["যেমন",9.81,10.023,2],["user-এর",10.023,10.473,2],["identifier,",10.473,11.87,2],["token",11.87,12.37,2],["কে",12.37,12.506,2],["তৈরি",12.506,12.728,2],["করেছে,",12.728,13.12,2],["token",13.48,13.64,3],["কোন",13.64,13.88,3],["application-এর",13.88,14.161,3],["জন্য,",14.161,14.25,3],["কিংবা",15.59,15.682,4],["token",15.682,16.1,4],["কখন",16.1,16.47,4],["expire",16.47,17.17,4],["করবে,",17.17,17.55,4],["আর",17.85,18.219,5],["আমরা",18.219,18.729,5],["এখানে",18.729,19.27,5],["signed",19.27,19.632,5],["JWT",19.632,19.87,5],["নিয়ে",19.87,20.24,5],["কথা",20.24,20.4,5],["বলছি,",20.4,20.69,5],["যার",21.28,21.364,6],["তিনটি",21.364,21.55,6],["অংশ",21.55,21.885,6],["থাকে",21.885,22.24,6],["—",22.24,22.3,6],["Header,",22.263,22.37,6],["Payload",22.93,23.66,7],["এবং",23.66,23.747,7],["Signature,",23.747,24.79,7],["এই",24.79,25.39,7],["তিনটি",25.39,25.62,7],["অংশ",25.62,25.976,7],["একটি",25.976,26.54,7],["করে",26.54,26.813,7],["dot",26.813,27.23,7],["দিয়ে",27.23,27.45,7],["আলাদা",27.45,27.755,7],["করা",27.755,27.975,7],["হয়,",27.975,28.28,7],["তাই",28.59,28.65,8],["structure-টা",28.641,29.3,8],["দাঁড়ায়",29.3,30.09,8],["Header",30.09,30.77,8],["dot",30.77,30.905,8],["Payload",30.905,31.43,8],["dot",31.43,31.84,8],["Signature,",31.84,32.02,8],["এবার",32.71,32.84,9],["প্রথমে",32.84,33.62,9],["Header",33.62,34.12,9],["দেখি,",34.12,34.52,9],["এটি",34.52,34.86,9],["একটি",34.86,35.33,9],["ছোট",35.33,35.7,9],["JSON",35.7,35.772,9],["object,",35.772,35.89,9],["এখানে",36.28,37.15,10],["সাধারণত",37.15,37.32,10],["alg",37.32,38.07,10],["এবং",38.07,38.162,10],["typ",38.162,38.55,10],["থাকে,",38.55,38.69,10],["alg",39.12,39.46,11],["বলে",39.46,39.705,11],["দেয়",39.705,40.0,11],["token",40.0,40.51,11],["secure",40.51,40.76,11],["করার",40.76,41.4,11],["জন্য",41.4,41.68,11],["কোন",41.68,41.883,11],["algorithm",41.883,43.08,11],["ব্যবহার",43.08,43.63,11],["করা",43.63,44.125,11],["হয়েছে,",44.125,45.0,11],["যেমন",43.63,45.02,12],["আমাদের",45.02,45.23,12],["উদাহরণে",45.23,45.81,12],["HS256,",45.81,45.99,12],["যার",46.99,47.315,13],["মানে",47.315,47.73,13],["HMAC-এর",47.73,48.11,13],["সঙ্গে",48.11,48.512,13],["SHA-256",48.512,49.42,13],["ব্যবহার",49.42,50.06,13],["করা",50.06,50.288,13],["হচ্ছে,",50.288,50.69,13],["আর",50.75,51.02,14],["typ-এর",51.02,51.6,14],["value",51.6,51.99,14],["JWT",51.99,52.59,14],["হলে",52.59,52.83,14],["বোঝায়",52.83,53.1,14],["token-এর",53.1,53.74,14],["type",53.74,54.41,14],["JWT,",54.41,55.25,14],["তবে",54.41,55.34,15],["Header-এর",55.34,55.85,15],["ভেতরে",55.85,56.23,15],["কোনো",56.23,56.405,15],["secret",56.405,56.9,15],["key",56.9,57.57,15],["থাকে",57.57,57.995,15],["না,",57.995,58.42,15],["শুধু",58.44,58.5,16],["algorithm",58.485,59.41,16],["সম্পর্কে",59.41,59.75,16],["তথ্য",59.75,60.37,16],["থাকে,",60.37,61.53,16],["এই",60.37,61.56,17],["Header",61.56,61.72,17],["JSON-কে",61.72,62.39,17],["UTF-8",62.39,62.95,17],["bytes-এ",62.95,63.56,17],["রূপান্তর",63.56,64.03,17],["করে",64.03,64.41,17],["Base64URL",64.41,65.14,17],["encode",65.14,65.68,17],["করা",65.68,66.05,17],["হয়,",66.05,66.34,17],["আর",66.36,66.7,18],["এই",66.7,66.799,18],["encoded",66.799,67.17,18],["string-টাই",67.17,68.3,18],["token-এর",68.3,69.15,18],["প্রথম",69.15,69.846,18],["অংশ,",69.846,70.39,18],["এখানে",69.15,70.41,19],["মনে",70.41,70.505,19],["রাখা",70.505,70.66,19],["জরুরি",70.66,71.12,19],["যে",71.12,71.25,19],["encoding",71.25,72.21,19],["আর",72.21,72.497,19],["encryption",72.497,73.668,19],["এক",73.668,73.955,19],["জিনিস",73.955,74.352,19],["নয়,",74.352,74.75,19],["encoding",74.77,75.08,20],["তথ্যকে",75.08,75.54,20],["অন্য",75.54,76.28,20],["representation-এ",76.28,77.82,20],["প্রকাশ",77.82,78.185,20],["করে,",78.185,78.47,20],["কিন্তু",78.51,78.87,21],["encryption",78.87,79.049,21],["তথ্য",79.049,80.38,21],["গোপন",80.38,80.59,21],["রাখার",80.59,80.91,21],["জন্য",80.91,81.348,21],["ব্যবহৃত",81.348,82.05,21],["হয়,",82.05,82.37,21],["তাই",82.78,82.987,22],["Base64URL",82.987,83.84,22],["encoding-এর",83.84,84.71,22],["ক্ষেত্রে",84.71,85.38,22],["তথ্য",85.38,85.59,22],["পড়তে",85.59,85.98,22],["কোনো",85.98,86.18,22],["secret",86.18,86.75,22],["key",86.75,87.0,22],["লাগে",87.0,87.285,22],["না,",87.285,87.57,22],["Base64URL",87.99,88.77,23],["হলো",88.77,88.969,23],["Base64-এর",88.969,89.703,23],["URL-safe",89.703,90.44,23],["variant,",90.44,91.48,23],["যেখানে",91.57,91.732,24],["plus",91.732,92.37,24],["এবং",92.37,92.451,24],["slash-এর",92.451,92.79,24],["বদলে",92.79,93.383,24],["hyphen",93.383,94.52,24],["ও",94.52,94.604,24],["underscore",94.604,95.19,24],["ব্যবহার",95.19,95.76,24],["করা",95.76,95.936,24],["হয়,",95.936,96.18,24],["আর",96.77,97.043,25],["শেষের",97.043,97.5,25],["padding",97.5,97.998,25],["রাখা",97.998,98.169,25],["হয়",98.169,98.339,25],["না,",98.339,98.51,25],["এবার",99.03,99.338,26],["আসি",99.338,99.63,26],["Payload-এ,",99.63,100.58,26],["এটিও",100.58,100.81,26],["একটি",100.81,101.12,26],["JSON",101.12,101.92,26],["object,",101.92,102.09,26],["কিন্তু",102.58,102.675,27],["এখানে",102.675,102.79,27],["থাকে",102.79,103.51,27],["claims,",103.51,103.69,27],["যেমন",103.69,103.882,27],["sub-এ",103.882,104.5,27],["user-এর",104.5,105.193,27],["identifier,",105.193,106.25,27],["role-এ",106.3,106.397,28],["application-এর",106.397,107.61,28],["role,",107.61,107.878,28],["iss-এ",107.878,108.146,28],["issuer,",108.146,108.51,28],["এবং",108.9,109.128,29],["aud-এ",109.128,109.64,29],["intended",109.64,110.51,29],["audience",110.51,111.61,29],["রাখা",111.61,112.013,29],["যায়,",112.013,112.57,29],["sub",111.61,112.59,30],["হচ্ছে",112.59,112.709,30],["subject",112.709,113.37,30],["অর্থাৎ",113.37,113.9,30],["token",113.9,114.33,30],["কার",114.33,114.39,30],["সম্পর্কে,",114.375,114.49,30],["iss",115.13,115.53,31],["হচ্ছে",115.53,116.01,31],["issuer",116.01,116.19,31],["অর্থাৎ",116.19,116.78,31],["কে",116.78,116.931,31],["token",116.931,117.5,31],["issue",117.5,118.26,31],["করেছে,",118.26,118.4,31],["aud",118.71,118.93,32],["হচ্ছে",118.93,119.08,32],["audience",119.08,119.75,32],["অর্থাৎ",119.75,120.38,32],["token",120.38,120.86,32],["কোন",120.86,121.009,32],["recipient-এর",121.009,122.18,32],["জন্য,",122.18,122.38,32],["exp",122.9,123.054,33],["দিয়ে",123.054,123.166,33],["expiration",123.166,124.1,33],["time",124.1,124.53,33],["বোঝানো",124.53,125.15,33],["হয়,",125.15,126.44,33],["iat",125.15,125.525,34],["দিয়ে",125.525,125.795,34],["বোঝানো",125.795,126.17,34],["যায়",126.17,126.87,34],["token",126.87,127.28,34],["কখন",127.28,127.671,34],["issue",127.671,128.34,34],["হয়েছে,",128.34,128.46,34],["আর",128.85,129.127,35],["nbf",129.127,129.53,35],["দিয়ে",129.53,129.614,35],["বোঝানো",129.614,130.07,35],["যায়",130.07,130.27,35],["কোন",130.27,130.84,35],["সময়ের",130.84,131.364,35],["আগে",131.364,131.73,35],["token",131.73,132.257,35],["গ্রহণ",132.257,132.75,35],["করা",132.75,132.81,35],["যাবে",132.81,132.89,35],["না,",132.89,133.81,35],["এই",133.83,133.89,36],["time-related",133.874,134.74,36],["claims",134.74,135.49,36],["সাধারণত",135.49,136.011,36],["Unix",136.011,136.439,36],["epoch",136.439,136.99,36],["থেকে",136.99,137.36,36],["গণনা",137.36,137.708,36],["করা",137.708,137.98,36],["seconds",137.98,138.41,36],["হিসেবে",138.41,139.05,36],["প্রকাশ",139.05,139.374,36],["করা",139.374,139.557,36],["হয়,",139.557,139.81,36],["তবে",140.3,140.413,37],["সব",140.413,140.526,37],["claim",140.526,140.88,37],["প্রতিটি",140.88,141.35,37],["token-এ",141.35,142.23,37],["বাধ্যতামূলক",142.23,142.72,37],["নয়,",142.72,143.04,37],["application-এর",143.69,145.42,38],["প্রয়োজন",145.42,145.807,38],["অনুযায়ী",145.807,146.125,38],["এগুলো",146.125,146.373,38],["নির্বাচন",146.373,147.21,38],["করা",147.21,147.541,38],["হয়,",147.541,148.0,38],["আর",148.05,148.11,39],["Header-এর",148.103,148.63,39],["মতোই",148.63,148.921,39],["Payload-এর",148.921,149.777,39],["JSON-ও",149.777,150.51,39],["Base64URL",150.51,151.25,39],["encode",151.25,151.71,39],["করে",151.71,152.07,39],["token-এর",152.07,152.69,39],["দ্বিতীয়",152.69,153.23,39],["অংশ",153.23,153.387,39],["তৈরি",153.387,153.545,39],["করা",153.545,153.702,39],["হয়,",153.702,153.92,39],["কিন্তু",154.41,154.764,40],["মনে",154.764,155.04,40],["রাখা",155.04,155.141,40],["দরকার,",155.141,155.39,40],["encode",155.39,156.42,40],["করা",156.42,156.755,40],["মানে",156.755,157.12,40],["গোপন",157.12,157.355,40],["করা",157.355,157.525,40],["নয়,",157.525,157.76,40],["তাই",158.13,158.19,41],["password",158.169,158.93,41],["বা",158.93,159.0,41],["secret",159.0,159.32,41],["key-এর",159.32,160.01,41],["মতো",160.01,160.142,41],["sensitive",160.142,160.93,41],["তথ্য",160.93,161.16,41],["Payload-এ",161.16,161.74,41],["রাখা",161.74,162.0,41],["উচিত",162.0,162.21,41],["নয়,",162.21,162.43,41],["এবার",162.87,162.963,42],["encoded",162.963,164.16,42],["Header",164.16,164.633,42],["আর",164.633,164.92,42],["encoded",164.92,165.32,42],["Payload-কে",165.32,166.17,42],["একটি",166.17,166.715,42],["dot",166.715,167.28,42],["দিয়ে",167.28,167.41,42],["জোড়া",167.41,167.56,42],["লাগিয়ে",167.56,167.92,42],["যে",167.92,168.35,42],["string",168.35,168.84,42],["তৈরি",168.84,169.033,42],["হয়,",169.033,169.3,42],["সেটাই",169.37,169.43,43],["signing",169.409,169.98,43],["input,",169.98,170.41,43],["HS256-এর",170.46,171.09,44],["ক্ষেত্রে",171.09,171.52,44],["এই",171.52,172.0,44],["signing",172.0,172.79,44],["input",172.79,173.172,44],["এবং",173.172,173.41,44],["একটি",173.41,173.512,44],["secret",173.512,173.96,44],["key",173.96,174.57,44],["ব্যবহার",174.57,174.754,44],["করে",174.754,175.14,44],["HMAC-SHA256",175.14,176.29,44],["হিসাব",176.29,176.477,44],["করা",176.477,176.613,44],["হয়,",176.613,176.8,44],["আর",177.1,177.219,45],["সেই",177.219,177.337,45],["output-কে",177.337,177.94,45],["Base64URL",177.94,178.84,45],["encode",178.84,179.56,45],["করলে",179.56,179.798,45],["তৈরি",179.798,180.0,45],["হয়",180.0,180.06,45],["Signature,",180.059,180.3,45],["অর্থাৎ",180.0,181.74,46],["Signature",181.74,182.11,46],["শুধু",182.11,182.275,46],["Payload-এর",182.275,183.62,46],["ওপর",183.62,183.835,46],["নয়,",183.835,184.05,46],["বরং",184.36,184.51,47],["পুরো",184.51,184.72,47],["signing",184.72,185.6,47],["input-এর",185.6,185.97,47],["ওপর",185.97,186.15,47],["তৈরি",186.15,186.347,47],["হয়,",186.347,186.62,47],["আর",187.07,187.28,48],["এই",187.28,187.461,48],["secret",187.461,187.95,48],["key",187.95,188.29,48],["কখনো",188.29,188.59,48],["token-এর",188.59,189.41,48],["সঙ্গে",189.41,189.54,48],["পাঠানো",189.54,189.785,48],["হয়",189.785,189.963,48],["না,",189.963,190.14,48],["HS256-এ",190.64,191.13,49],["token",191.13,191.52,49],["তৈরি",191.52,191.83,49],["এবং",191.83,191.89,49],["verify",191.884,192.41,49],["করার",192.41,192.59,49],["জন্য",192.59,193.07,49],["একই",193.07,193.324,49],["shared",193.324,193.81,49],["secret",193.81,194.49,49],["ব্যবহার",194.49,194.7,49],["করা",194.7,194.994,49],["হয়,",194.994,195.4,49],["তবে",195.42,195.546,50],["asymmetric",195.546,196.08,50],["algorithm-এর",196.08,197.21,50],["ক্ষেত্রে",197.21,197.7,50],["private",197.7,198.6,50],["key",198.6,198.693,50],["দিয়ে",198.693,198.86,50],["sign",198.86,199.1,50],["এবং",199.1,199.54,50],["public",199.54,200.09,50],["key",200.09,200.43,50],["দিয়ে",200.43,200.503,50],["verify",200.503,200.76,50],["করা",200.76,201.06,50],["হয়,",201.15,201.427,51],["এরপর",201.427,201.81,51],["encoded",201.81,201.99,51],["Header,",201.99,202.42,51],["encoded",202.85,203.27,52],["Payload",203.27,203.419,52],["এবং",203.419,204.56,52],["encoded",204.56,205.18,52],["Signature-কে",205.18,206.0,52],["dot",206.0,206.22,52],["দিয়ে",206.22,206.581,52],["যুক্ত",206.581,207.11,52],["করলেই",207.11,207.32,52],["তৈরি",207.32,207.63,52],["হয়ে",207.63,208.06,52],["যায়",208.06,208.12,52],["সম্পূর্ণ",208.095,208.59,52],["signed",208.59,209.57,52],["JWT,",209.61,210.013,53],["কিন্তু",210.013,210.329,53],["token",210.329,210.86,53],["তৈরি",210.86,210.931,53],["হওয়া",210.931,211.4,53],["আর",211.4,211.466,53],["বিশ্বাসযোগ্য",211.466,211.86,53],["হওয়া",211.86,212.481,53],["এক",212.481,212.93,53],["কথা",212.93,213.379,53],["নয়,",213.379,214.0,53],["কারণ",211.86,214.09,54],["server",214.09,214.23,54],["যদি",214.23,214.39,54],["শুধু",214.39,214.94,54],["Payload",214.94,215.609,54],["decode",215.609,216.27,54],["করে",216.27,216.421,54],["তথ্য",216.421,216.68,54],["বিশ্বাস",216.68,216.81,54],["করে",216.81,217.06,54],["নেয়,",217.06,217.28,54],["তাহলে",217.52,218.09,55],["verification-এর",218.09,219.41,55],["মূল",219.41,219.692,55],["কাজটাই",219.692,220.22,55],["বাদ",220.22,220.406,55],["পড়ে",220.406,220.592,55],["যায়,",220.592,220.85,55],["তাই",220.96,221.076,56],["server",221.076,221.74,56],["প্রথমে",221.74,222.37,56],["নিজের",222.37,222.43,56],["configuration",222.393,223.29,56],["অনুযায়ী",223.29,223.781,56],["অনুমোদিত",223.781,224.378,56],["algorithm",224.378,225.403,56],["ব্যবহার",225.403,226.06,56],["হচ্ছে",226.06,226.171,56],["কি",226.171,226.24,56],["না",226.24,226.52,56],["তা",226.52,226.662,56],["যাচাই",226.662,226.98,56],["করে,",227.01,227.26,57],["এরপর",227.89,228.11,58],["সঠিক",228.11,228.56,58],["key",228.56,228.84,58],["দিয়ে",228.84,229.16,58],["Signature",229.16,230.37,58],["verify",230.37,230.571,58],["করে,",230.571,230.68,58],["একই",231.13,231.32,59],["signing",231.32,232.13,59],["input",232.13,232.47,59],["থেকে",232.47,232.7,59],["expected",232.7,233.39,59],["HMAC",233.39,233.93,59],["হিসাব",233.93,234.49,59],["করে",234.49,234.55,59],["এবং",234.547,234.607,59],["received",234.603,235.12,59],["Signature-এর",235.12,236.792,59],["সঙ্গে",236.792,237.29,59],["মিলিয়ে",237.29,237.395,59],["দেখে,",237.395,237.5,59],["তবে",237.84,238.093,60],["Signature",238.093,239.026,60],["valid",239.026,239.59,60],["হলেই",239.59,239.682,60],["সব",239.682,239.748,60],["শর্ত",239.748,240.06,60],["পূরণ",240.06,240.322,60],["হয়ে",240.322,240.511,60],["যায়",240.511,240.701,60],["না,",240.701,240.89,60],["কারণ",241.33,241.447,61],["token",241.447,241.84,61],["expire",241.84,242.56,61],["করেছে",242.56,242.888,61],["কি",242.888,243.033,61],["না,",243.033,243.27,61],["issuer",243.61,244.09,62],["প্রত্যাশিত",244.09,244.56,62],["কি",244.56,244.69,62],["না,",244.69,244.767,62],["audience",244.767,245.36,62],["সঠিক",245.36,246.08,62],["কি",246.08,246.14,62],["না,",246.137,246.23,62],["এসবও",246.33,247.01,63],["যাচাই",247.01,247.385,63],["করতে",247.385,247.78,63],["হয়,",247.78,247.855,63],["আর",247.855,247.99,63],["এই",247.99,248.098,63],["কারণেই",248.098,248.68,63],["নিজের",248.68,249.11,63],["হাতে",249.11,249.269,63],["verification",249.269,250.43,63],["না",250.43,250.578,63],["বানিয়ে",250.578,250.91,63],["উপযুক্ত,",250.91,251.52,63],["maintained",251.85,252.75,64],["library",252.75,253.401,64],["ব্যবহার",253.401,253.91,64],["করা",253.91,254.145,64],["ভালো,",254.145,254.47,64],["যাকে",254.82,254.887,65],["সঠিক",254.887,255.0,65],["algorithm,",255.0,255.254,65],["key",255.254,256.55,65],["এবং",256.55,256.633,65],["claim-validation",256.633,258.16,65],["policy",258.16,258.605,65],["দিয়ে",258.605,258.81,65],["configure",258.81,259.32,65],["করতে",259.32,259.53,65],["হয়,",259.53,259.82,65],["সবশেষে",260.25,260.47,66],["মনে",260.47,260.716,66],["রাখা",260.716,260.961,66],["দরকার,",260.961,261.52,66],["Header",261.52,262.14,66],["বলে",262.14,262.535,66],["দেয়",262.535,262.99,66],["token",262.99,263.15,66],["কীভাবে",263.15,263.36,66],["secured,",263.36,263.92,66],["Payload",264.67,265.27,67],["রাখে",265.27,265.33,67],["claims,",265.306,266.18,67],["Signature",266.18,266.87,67],["দিয়ে",266.87,267.056,67],["integrity",267.056,267.746,67],["যাচাই",267.746,268.005,67],["করা",268.005,268.191,67],["যায়,",268.191,268.45,67],["আর",268.78,268.84,68],["claims",268.828,269.01,68],["validation",269.01,270.166,68],["বলে",270.166,270.79,68],["দেয়",270.79,270.85,68],["token",270.838,271.21,68],["এই",271.21,271.376,68],["মুহূর্তে",271.376,271.72,68],["গ্রহণযোগ্য",271.72,272.42,68],["কি",272.42,272.56,68],["না,",272.56,272.89,68],["অর্থাৎ",273.55,274.13,69],["decode",274.13,274.67,69],["করা",274.67,274.899,69],["মানে",274.899,275.128,69],["verify",275.128,275.73,69],["করা",275.73,275.956,69],["নয়,",275.956,276.27,69],["আর",276.59,276.81,70],["encoding",276.81,277.72,70],["মানে",277.72,277.78,70],["encryption",277.759,279.05,70],["নয়",279.05,279.253,70],["—",279.253,279.378,70],["signed",279.378,279.894,70],["JWT-এর",279.894,280.46,70],["তথ্য",280.46,280.85,70],["পড়া",280.85,281.081,70],["গেলেও,",281.081,281.49,70],["সেটা",281.77,282.023,71],["বিশ্বাস",282.023,282.5,71],["করার",282.5,282.632,71],["আগে",282.632,282.728,71],["Signature",282.728,283.36,71],["এবং",283.36,284.34,71],["প্রয়োজনীয়",284.34,284.62,71],["claims",284.62,285.41,71],["অবশ্যই",285.41,285.94,71],["যাচাই",285.94,286.31,71],["করতে",286.31,286.37,71],["হয়।",286.37,286.43,71]]};
+
+/* ============ beats: cue ranges + word-bound visuals ============ */
+const BEATS = [
+/* 1*/ {c0:0, c1:0, h:`<div class="bmid">
+        <div class="wm el pop" data-w="0"><span>J</span><span class="o">W</span><span>T</span></div>
+        <div class="pill el" data-w="3">🧩 <span class="k">JSON</span>&nbsp;Web Token</div></div>`},
+/* 2*/ {c0:1, c1:1, h:`<div class="btop"><div class="pill glass el pop" data-w="9">📦 compact format</div></div>
+        <div class="bmid">
+        <div class="row el" data-w="13">
+          <div class="gbox glass shine"><div class="ic">👤</div><div class="t1">এক পক্ষ</div><div class="t2">claims পাঠায়</div></div>
+          <div class="tokenfly">JWT</div>
+          <div class="gbox glass shine"><div class="ic">🖥️</div><div class="t1">অন্য পক্ষ</div><div class="t2">claims পায়</div></div>
+        </div>
+        <div class="pill el" data-w="18">🔐 <span class="k">claims</span>&nbsp;= ছোট ছোট তথ্য</div></div>`},
+/* 3*/ {c0:2, c1:4, h:`<div class="bmid">
+        <div class="row el" data-w="23">
+          <div class="gbox glass"><div class="ic">🪪</div><div class="t1">user id</div><div class="t2">user-এর identifier</div></div>
+          <div class="el gbox glass" data-w="26"><div class="ic">🏭</div><div class="t1">issued by</div><div class="t2">কে তৈরি করেছে</div></div>
+        </div>
+        <div class="row el" data-w="30">
+          <div class="gbox glass"><div class="ic">📱</div><div class="t1">app</div><div class="t2">কোন application-এর জন্য</div></div>
+          <div class="el gbox glass" data-w="35"><div class="ic">⏱️</div><div class="t1">expire</div><div class="t2">কখন expire করবে</div></div>
+        </div></div>`},
+/* 4*/ {c0:5, c1:6, h:`<div class="btop"><div class="pill glass el pop" data-w="41">🔏 signed JWT</div></div>
+        <div class="bmid"><div class="row el" data-w="47">
+          <div class="slab glass shine"><div class="num">PART 01</div><div class="name">Header</div><div class="hint">কীভাবে secured</div></div>
+          <div class="slab glass"><div class="num">PART 02</div><div class="name">Payload</div><div class="hint">claims</div></div>
+          <div class="slab glass"><div class="num">PART 03</div><div class="name">Signature</div><div class="hint">integrity</div></div>
+        </div></div>
+        <div class="kin"><span class="el kw" data-w="38">আর</span><span class="el kw" data-w="39">আমরা</span><span class="el kw" data-w="40">এখানে</span><span class="el kw" data-w="41">signed</span><span class="el kw klast" data-w="42">JWT</span><span class="el kw" data-w="43">নিয়ে</span><span class="el kw" data-w="44">কথা</span><span class="el kw" data-w="45">বলছি,</span></div>`},
+/* 5*/ {c0:7, c1:7, h:`<div class="bmid">
+        <div class="row el" data-w="52">
+          <div class="slab glass shine on"><div class="num">PART 01</div><div class="name">Header</div></div>
+          <div class="dotsep"></div>
+          <div class="slab glass shine on"><div class="num">PART 02</div><div class="name">Payload</div></div>
+          <div class="dotsep"></div>
+          <div class="slab glass shine on"><div class="num">PART 03</div><div class="name">Signature</div></div>
+        </div>
+        <div class="pill el" data-w="60">একটি করে <span class="k">dot</span>&nbsp;দিয়ে আলাদা</div></div>`},
+/* 6*/ {c0:8, c1:8, h:`<div class="bmid">
+        <div class="formula glass shine el pop" data-w="68"><b>Header</b> &nbsp;·&nbsp; <b>Payload</b> &nbsp;·&nbsp; <b>Signature</b></div>
+        <div class="pill el" data-w="65">structure এভাবে দাঁড়ায়</div></div>`},
+/* 7*/ {c0:9, c1:10, h:`<div class="bmid">
+        <div class="code glass shine el left" data-w="75">{
+  <span class="key">"alg"</span>: <span class="str">"HS256"</span>,
+  <span class="key">"typ"</span>: <span class="str">"JWT"</span>
+}</div>
+        <div class="row el" data-w="84">
+          <div class="pill glass"><span class="k">alg</span>&nbsp;→ algorithm</div>
+          <div class="el pill glass" data-w="86"><span class="k">typ</span>&nbsp;→ type</div>
+        </div></div>`},
+/* 8*/ {c0:11, c1:12, h:`<div class="bmid">
+        <div class="row el" data-w="88">
+          <div class="gbox glass"><div class="ic">⚙️</div><div class="t1 mono">alg</div><div class="t2">কোন algorithm ব্যবহার হয়েছে</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot el pop" data-w="103"><div class="ic">🛡️</div><div class="t1 mono">HS256</div><div class="t2">আমাদের উদাহরণ</div></div>
+        </div></div>
+        <div class="kin"><span class="el kw" data-w="88">alg</span><span class="el kw" data-w="89">বলে</span><span class="el kw" data-w="90">দেয়</span><span class="el kw" data-w="91">token</span><span class="el kw" data-w="92">secure</span><span class="el kw" data-w="93">করার</span><span class="el kw" data-w="94">জন্য</span><span class="el kw" data-w="95">কোন</span><span class="el kw klast" data-w="96">algorithm</span><span class="el kw" data-w="97">ব্যবহার</span><span class="el kw" data-w="98">করা</span><span class="el kw" data-w="99">হয়েছে,</span></div>`},
+/* 9*/ {c0:13, c1:13, h:`<div class="bmid">
+        <div class="row el" data-w="106">
+          <div class="gbox glass"><div class="t1 mono">HMAC</div></div>
+          <div class="neq">+</div>
+          <div class="gbox glass"><div class="t1 mono">SHA-256</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot"><div class="t1 mono">HS256</div><div class="t2">দুটো মিলে গঠিত</div></div>
+        </div></div>
+        <div class="kin"><span class="el kw" data-w="104">যার</span><span class="el kw" data-w="105">মানে</span><span class="el kw klast" data-w="106">HMAC-এর</span><span class="el kw" data-w="107">সঙ্গে</span><span class="el kw klast" data-w="108">SHA-256</span><span class="el kw" data-w="109">ব্যবহার</span><span class="el kw" data-w="110">করা</span><span class="el kw" data-w="111">হচ্ছে,</span></div>`},
+/*10*/ {c0:14, c1:14, h:`<div class="bmid">
+        <div class="code glass el right"><span class="key">"typ"</span>: <span class="str">"JWT"</span></div>
+        <div class="pill glass el pop" data-w="119">token-এর type = <span class="k">JWT</span></div></div>`},
+/*11*/ {c0:15, c1:16, h:`<div class="bmid">
+        <div class="gbox glass cross el pop" style="width:400px;min-height:220px" data-w="125">
+          <div class="ic">🔑</div><div class="t1">secret key</div><div class="t2">Header-এর ভেতরে থাকে না</div></div>
+        <div class="row el" data-w="130">
+          <div class="pill glass"><span class="k">algorithm</span>&nbsp;সম্পর্কে তথ্য</div>
+          <div class="pill glass">শুধু এটাই থাকে</div>
+        </div></div>`},
+/*12*/ {c0:17, c1:18, h:`<div class="bmid">
+        <div class="row el" data-w="135">
+          <div class="code glass" style="font-size:28px;min-width:300px">{ alg, typ }</div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass"><div class="t1 mono" style="font-size:25px">01101001</div><div class="t2">UTF-8 bytes</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot"><div class="t1 mono" style="font-size:23px">eyJhbGci…</div><div class="t2">Base64URL encode</div></div>
+        </div>
+        <div class="pill glass el pop" data-w="150">🧩 token-এর <span class="k">১ম অংশ</span></div></div>`},
+/*13*/ {c0:19, c1:19, h:`<div class="bmid">
+        <div class="bigtext el pop" data-w="157"><b>encoding</b> ≠ <b>encryption</b></div>
+        <div class="pill glass el" data-w="160">এক জিনিস নয়</div></div>`},
+/*14*/ {c0:20, c1:21, h:`<div class="bmid"><div class="vs">
+          <div class="vpanel glass el left" data-w="163">
+            <div class="ic">🔓</div><div class="vt">encoding</div>
+            <div class="vs2">তথ্যকে অন্য <b>representation</b>-এ প্রকাশ করে<br>সবাই পড়তে পারে</div>
+          </div>
+          <div class="neq el pop" data-w="169">≠</div>
+          <div class="vpanel glass el right" data-w="170">
+            <div class="ic">🔒</div><div class="vt">encryption</div>
+            <div class="vs2">তথ্য <b>গোপন</b> রাখার জন্য<br>key ছাড়া পড়া যায় না</div>
+          </div>
+        </div></div>`},
+/*15*/ {c0:22, c1:22, h:`<div class="bmid">
+        <div class="row el" data-w="183">
+          <div class="gbox glass cross"><div class="ic">🔑</div><div class="t1">secret key</div></div>
+          <div class="neq">≠</div>
+          <div class="gbox glass okmark"><div class="ic">📖</div><div class="t1">পড়া যায়</div><div class="t2">Base64URL — কোনো key লাগে না</div></div>
+        </div></div>`},
+/*16*/ {c0:23, c1:23, h:`<div class="bmid">
+        <div class="row el pop">
+          <div class="pill glass"><span class="k">Base64</span></div>
+          <div class="arrow">➜</div>
+          <div class="pill glass hot"><span class="k">Base64URL</span>&nbsp;= URL-safe variant</div>
+        </div></div>`},
+/*17*/ {c0:24, c1:25, h:`<div class="bmid" style="gap:30px">
+        <div class="row el" data-w="194">
+          <div class="gbox glass"><div class="t1 mono">+</div><div class="t2">plus</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot"><div class="t1 mono">-</div><div class="t2">hyphen</div></div>
+        </div>
+        <div class="row el" data-w="199">
+          <div class="gbox glass"><div class="t1 mono">/</div><div class="t2">slash</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot"><div class="t1 mono">_</div><div class="t2">underscore</div></div>
+        </div>
+        <div class="row el" data-w="205">
+          <div class="gbox glass cross" style="width:240px;min-height:120px"><div class="t1 mono">A=</div><div class="t2">padding</div></div>
+          <div class="pill glass">শেষের padding <span class="k">রাখা হয় না</span></div>
+        </div></div>`},
+/*18*/ {c0:26, c1:26, h:`<div class="btop"><div class="pill glass el pop" data-w="211">📦 Payload</div></div>
+        <div class="bmid">
+        <div class="code glass shine el pop" data-w="214">{
+  <span class="key">"sub"</span>: <span class="str">"user-123"</span>,
+  <span class="key">"role"</span>: <span class="str">"admin"</span>,
+  …
+}</div>
+        <div class="pill el" data-w="213">এটিও একটি <span class="k">JSON object</span></div></div>`},
+/*19*/ {c0:27, c1:29, h:`<div class="btop"><div class="pill glass el pop" data-w="220">🧾 claims</div></div>
+        <div class="bmid"><div class="grid">
+          <div class="claim glass el" data-w="222"><div class="c1">sub</div><div class="c2">user identifier</div></div>
+          <div class="claim glass el" data-w="225"><div class="c1">role</div><div class="c2">application role</div></div>
+          <div class="claim glass el" data-w="228"><div class="c1">iss</div><div class="c2">issuer</div></div>
+          <div class="claim glass el" data-w="231"><div class="c1">aud</div><div class="c2">intended audience</div></div>
+        </div></div>`},
+/*20*/ {c0:30, c1:30, h:`<div class="bmid">
+        <div class="gbox glass hot el pop" style="width:500px;min-height:250px" data-w="236">
+          <div class="ic">🪪</div><div class="t1 mono">sub</div><div class="t2">subject — token কার সম্পর্কে</div></div></div>`},
+/*21*/ {c0:31, c1:31, h:`<div class="bmid">
+        <div class="gbox glass hot el pop" style="width:500px;min-height:250px" data-w="243">
+          <div class="ic">🏭</div><div class="t1 mono">iss</div><div class="t2">issuer — কে token issue করেছে</div></div></div>`},
+/*22*/ {c0:32, c1:32, h:`<div class="bmid">
+        <div class="gbox glass hot el pop" style="width:500px;min-height:250px" data-w="251">
+          <div class="ic">🎯</div><div class="t1 mono">aud</div><div class="t2">audience — কোন recipient-এর জন্য</div></div></div>`},
+/*23*/ {c0:33, c1:35, h:`<div class="btop"><div class="pill glass el pop" data-w="261">⏱️ time claims</div></div>
+        <div class="bmid"><div class="timelineWrap el" data-w="259">
+          <div class="timeline"></div>
+          <div class="tmark el" data-w="259" style="left:16%"><i></i><span class="mono">exp</span><small>expiration time</small></div>
+          <div class="tmark el" data-w="265" style="left:50%"><i></i><span class="mono">iat</span><small>issue হয়েছে</small></div>
+          <div class="tmark el" data-w="274" style="left:84%"><i></i><span class="mono">nbf</span><small>এর আগে গ্রহণ নয়</small></div>
+        </div></div>`},
+/*24*/ {c0:36, c1:36, h:`<div class="bmid">
+        <div class="counter el pop" id="epochCounter" data-count="1729862400" data-w="290">0</div>
+        <div class="pill glass el" data-w="295">Unix epoch থেকে গণনা করা <span class="k">seconds</span></div></div>`},
+/*25*/ {c0:37, c1:38, h:`<div class="bmid">
+        <div class="row el" data-w="301">
+          <div class="claim glass"><div class="c1">sub</div><div class="c2">✓ optional</div></div>
+          <div class="claim glass"><div class="c1">exp</div><div class="c2">✓ optional</div></div>
+          <div class="claim glass"><div class="c1">nbf</div><div class="c2">✓ optional</div></div>
+        </div>
+        <div class="pill glass el pop" data-w="305">সব claim বাধ্যতামূলক <span class="k">নয়</span> — প্রয়োজন অনুযায়ী বাছাই</div></div>`},
+/*26*/ {c0:39, c1:39, h:`<div class="bmid">
+        <div class="row el" data-w="317">
+          <div class="code glass" style="font-size:28px;min-width:300px">{ sub, role, … }</div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass"><div class="t1 mono" style="font-size:25px">eyJzdWIi…</div><div class="t2">Base64URL</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot"><div class="t1">২য় অংশ</div><div class="t2">Payload encoded</div></div>
+        </div></div>`},
+/*27*/ {c0:40, c1:41, h:`<div class="bmid">
+        <div class="bigtext el pop" data-w="332">encode করা মানে <b>গোপন করা নয়</b></div>
+        <div class="row el" data-w="339">
+          <div class="gbox glass cross"><div class="ic">🔑</div><div class="t1">password</div><div class="t2">Payload-এ রাখবে না</div></div>
+          <div class="gbox glass cross"><div class="ic">🗝️</div><div class="t1">secret key</div><div class="t2">sensitive data ❌</div></div>
+        </div></div>`},
+/*28*/ {c0:42, c1:43, h:`<div class="bmid">
+        <div class="row el" data-w="351">
+          <div class="minipart hot">eyJhbGci…</div>
+          <div class="dotsep"></div>
+          <div class="minipart hot">eyJzdWIi…</div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot"><div class="t1 mono" style="font-size:23px">eyJ… . eyJ…</div><div class="t2">একটি string</div></div>
+        </div>
+        <div class="pill glass el pop" data-w="365">🧩 সেটাই <span class="k">signing input</span></div></div>`},
+/*29*/ {c0:44, c1:44, h:`<div class="bmid">
+        <div class="row el" data-w="370">
+          <div class="gbox glass"><div class="t1">signing input</div><div class="t2">Header . Payload</div></div>
+          <div class="neq">+</div>
+          <div class="gbox glass"><div class="ic">🔑</div><div class="t1">secret key</div></div>
+          <div class="arrow">➜</div>
+          <div class="machine"><div class="mt">HMAC-SHA256</div><div class="ms">hash হিসাব হয়</div></div>
+        </div></div>`},
+/*30*/ {c0:45, c1:45, h:`<div class="bmid">
+        <div class="row el" data-w="385">
+          <div class="gbox glass"><div class="t1 mono" style="font-size:23px">a1b2c3…</div><div class="t2">hash output</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass"><div class="t2">Base64URL</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass hot el pop"><div class="ic">✍️</div><div class="t1">Signature</div></div>
+        </div></div>`},
+/*31*/ {c0:46, c1:47, h:`<div class="bmid"><div class="row">
+          <div class="gbox glass cross el" data-w="393"><div class="t1">শুধু Payload</div><div class="t2">এর ওপর নয়</div></div>
+          <div class="gbox glass okmark el" data-w="399"><div class="t1">পুরো signing input</div><div class="t2">Header + Payload দুটোর ওপর</div></div>
+        </div></div>`},
+/*32*/ {c0:48, c1:49, h:`<div class="bmid"><div class="row">
+          <div class="gbox glass okmark el" data-w="407"><div class="ic">🔒</div><div class="t1">secret key</div><div class="t2">token-এর সঙ্গে যায় না</div></div>
+          <div class="gbox glass hot el pop" data-w="422"><div class="ic">🤝</div><div class="t1">shared secret</div><div class="t2">HS256 — একই key দিয়ে sign + verify</div></div>
+        </div></div>`},
+/*33*/ {c0:50, c1:51, h:`<div class="bmid"><div class="vs">
+          <div class="vpanel glass el left" data-w="432"><div class="ic">🔐</div><div class="vt mono">private key</div><div class="vs2">দিয়ে <b>sign</b> করা হয়</div></div>
+          <div class="vpanel glass el right" data-w="437"><div class="ic">🔓</div><div class="vt mono">public key</div><div class="vs2">দিয়ে <b>verify</b> করা হয়<br>(asymmetric algorithm)</div></div>
+        </div></div>
+        <div class="kin"><span class="el kw" data-w="442">হয়,</span><span class="el kw" data-w="443">এরপর</span><span class="el kw klast" data-w="444">encoded</span><span class="el kw" data-w="445">Header,</span></div>`},
+/*34*/ {c0:52, c1:52, h:`<div class="bmid">
+        <div class="row el" data-w="446">
+          <div class="minipart hot">eyJhbGci…</div><div class="dotsep"></div>
+          <div class="minipart hot">eyJzdWIi…</div><div class="dotsep"></div>
+          <div class="minipart hot">a1b2c3…</div>
+        </div>
+        <div class="bigtext el pop" data-w="458">সম্পূর্ণ <b>signed JWT</b> ✅</div></div>`},
+/*35*/ {c0:53, c1:55, h:`<div class="bmid">
+        <div class="row el" data-w="463">
+          <div class="gbox glass hot"><div class="ic">🎫</div><div class="t1">token তৈরি</div></div>
+          <div class="neq">≠</div>
+          <div class="gbox glass hot"><div class="ic">✅</div><div class="t1">বিশ্বাসযোগ্য</div></div>
+        </div>
+        <div class="row el" data-w="472">
+          <div class="gbox glass"><div class="ic">🖥️</div><div class="t1">server</div><div class="t2">শুধু Payload decode করলে…</div></div>
+          <div class="arrow">➜</div>
+          <div class="gbox glass cross"><div class="ic">⚠️</div><div class="t1">verification বাদ পড়ে</div><div class="t2">মূল কাজটাই হারায়</div></div>
+        </div></div>`},
+/*36*/ {c0:56, c1:57, h:`<div class="bmid">
+        <div class="step glass el" data-w="490"><div class="chk">1</div><div class="txt">Algorithm check<small>configuration অনুযায়ী অনুমোদিত algorithm কি না</small></div></div>
+        <div class="pill glass good el pop" data-w="502">✓ যাচাই করে</div></div>
+        <div class="kin">
+          <span class="el kw" data-w="489">তাই</span><span class="el kw" data-w="490">server</span><span class="el kw" data-w="491">প্রথমে</span><span class="el kw" data-w="492">নিজের</span><span class="el kw" data-w="493">configuration</span><span class="el kw" data-w="494">অনুযায়ী</span><span class="el kw" data-w="495">অনুমোদিত</span><span class="el kw klast" data-w="496">algorithm</span><span class="el kw" data-w="497">ব্যবহার</span><span class="el kw" data-w="498">হচ্ছে</span><span class="el kw" data-w="499">কি</span><span class="el kw" data-w="500">না</span><span class="el kw" data-w="501">তা</span><span class="el kw" data-w="502">যাচাই</span><span class="el kw" data-w="503">করে,</span></div>`},
+/*37*/ {c0:58, c1:59, h:`<div class="bmid">
+        <div class="step glass el" data-w="507"><div class="chk">2</div><div class="txt">Signature verify<small>সঠিক key দিয়ে</small></div></div>
+        <div class="row el" data-w="515">
+          <div class="gbox glass"><div class="t1 mono">expected HMAC</div></div>
+          <div class="neq">⇄</div>
+          <div class="gbox glass"><div class="t1 mono">received Signature</div></div>
+        </div></div>
+        <div class="kin">
+          <span class="el kw" data-w="511">একই</span><span class="el kw" data-w="512">signing</span><span class="el kw" data-w="513">input</span><span class="el kw" data-w="514">থেকে</span><span class="el kw klast" data-w="515">expected</span><span class="el kw" data-w="516">HMAC</span><span class="el kw" data-w="517">হিসাব</span><span class="el kw" data-w="518">করে</span><span class="el kw" data-w="519">এবং</span><span class="el kw klast" data-w="520">received</span><span class="el kw" data-w="521">Signature-এর</span><span class="el kw" data-w="522">সঙ্গে</span><span class="el kw" data-w="523">মিলিয়ে</span><span class="el kw" data-w="524">দেখে,</span></div>`},
+/*38*/ {c0:60, c1:62, h:`<div class="btop"><div class="pill glass warn el pop" data-w="526">Signature valid ≠ সব শর্ত পূরণ</div></div>
+        <div class="bmid">
+        <div class="row el" data-w="536">
+          <div class="claim glass"><div class="c1">exp</div><div class="c2">expire করেছে কি না</div></div>
+          <div class="claim glass"><div class="c1">iss</div><div class="c2">issuer প্রত্যাশিত কি না</div></div>
+          <div class="claim glass"><div class="c1">aud</div><div class="c2">audience সঠিক কি না</div></div>
+        </div>
+        <div class="pill glass good el pop" data-w="545">✓ claims validation</div></div>`},
+/*39*/ {c0:63, c1:65, h:`<div class="bmid">
+        <div class="row el" data-w="557">
+          <div class="gbox glass cross"><div class="ic">🛠️</div><div class="t1">নিজের হাতে বানানো</div><div class="t2">verification risky</div></div>
+          <div class="arrow">➜</div>
+          <div class="pkg glass hot el pop" data-w="562">📚</div>
+          <div class="gbox glass hot el" data-w="563"><div class="t1">maintained library</div><div class="t2">ভালো অপশন</div></div>
+        </div>
+        <div class="row el" data-w="569">
+          <div class="pill glass"><span class="k">algorithm</span>&nbsp;policy</div>
+          <div class="pill glass"><span class="k">key</span></div>
+          <div class="pill glass"><span class="k">claim-validation</span>&nbsp;policy</div>
+        </div></div>
+        <div class="kin">
+          <span class="el kw" data-w="549">এসবও</span><span class="el kw" data-w="550">যাচাই</span><span class="el kw" data-w="551">করতে</span><span class="el kw" data-w="552">হয়,</span><span class="el kw" data-w="553">আর</span><span class="el kw" data-w="554">এই</span><span class="el kw" data-w="555">কারণেই</span><span class="el kw" data-w="556">নিজের</span><span class="el kw klast" data-w="557">হাতে</span><span class="el kw" data-w="558">verification</span><span class="el kw" data-w="559">না</span><span class="el kw" data-w="560">বানিয়ে</span><span class="el kw" data-w="561">উপযুক্ত,</span></div>`},
+/*40*/ {c0:66, c1:68, h:`<div class="bmid">
+        <div class="row">
+          <div class="gbox glass hot el pop" data-w="582"><div class="ic">🛡️</div><div class="t1">Header</div><div class="t2">কীভাবে secured</div></div>
+          <div class="gbox glass hot el pop" data-w="588"><div class="ic">🧾</div><div class="t1">Payload</div><div class="t2">claims রাখে</div></div>
+          <div class="gbox glass hot el pop" data-w="591"><div class="ic">✍️</div><div class="t1">Signature</div><div class="t2">integrity যাচাই</div></div>
+        </div>
+        <div class="pill glass el" data-w="598">claims validation → এই মুহূর্তে গ্রহণযোগ্য কি না</div></div>`},
+/*41*/ {c0:69, c1:71, h:`<div class="bmid">
+        <div class="row el" data-w="609">
+          <div class="vpanel glass" style="width:500px"><div class="vt">decode</div><div class="vs2">মানে <b style="color:#ff6b6b">verify নয়</b></div></div>
+          <div class="vpanel glass el" data-w="616" style="width:500px"><div class="vt">encoding</div><div class="vs2">মানে <b style="color:#ff6b6b">encryption নয়</b></div></div>
+        </div>
+        <div class="row el" data-w="630">
+          <div class="pill glass good">✓ Signature যাচাই</div>
+          <div class="pill glass good">✓ claims যাচাই</div>
+          <div class="pill glass hot">তারপরই বিশ্বাস ✅</div>
+        </div></div>
+        <div class="kin">
+          <span class="el kw" data-w="626">সেটা</span><span class="el kw" data-w="627">বিশ্বাস</span><span class="el kw" data-w="628">করার</span><span class="el kw" data-w="629">আগে</span><span class="el kw klast" data-w="630">Signature</span><span class="el kw" data-w="631">এবং</span><span class="el kw" data-w="632">প্রয়োজনীয়</span><span class="el kw klast" data-w="633">claims</span><span class="el kw" data-w="634">অবশ্যই</span><span class="el kw" data-w="635">যাচাই</span><span class="el kw" data-w="636">করতে</span><span class="el kw" data-w="637">হয়।</span></div>`},
+];
+
+/* ============ engine ============ */
+const $ = (id) => document.getElementById(id);
+const audio = $('audio'), stage = $('stage'), stageArea = $('stageArea');
+const trackFill = $('trackFill'), timeEl = $('time');
+const startOverlay = $('startOverlay'), endOverlay = $('endOverlay');
+const errBox = $('err'), beatsBox = $('beats');
+const CUES = DATA.cues, WORDS = DATA.words;
+
+function beatTime(b){
+  return [CUES[b.c0].s - 0.12, b.c1 + 1 < CUES.length ? CUES[b.c1 + 1].s - 0.12 : DATA.duration];
+}
+BEATS.forEach((b, i) => {
+  const d = document.createElement('div');
+  d.className = 'beat'; d.id = 'beat-' + i; d.innerHTML = b.h;
+  beatsBox.appendChild(d);
+});
+
+function fit(){
+  const r = stageArea.getBoundingClientRect();
+  const s = Math.min(r.width / 1920, r.height / 1080);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+(function(){
+  const box = $('particles');
+  for(let i = 0; i < 26; i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (Math.random() < .35 ? ' o' : '');
+    const s = 3 + Math.random() * 7;
+    d.style.width = d.style.height = s + 'px';
+    d.style.left = Math.random() * 100 + '%';
+    d.style.top = (40 + Math.random() * 60) + '%';
+    d.style.animationDuration = (9 + Math.random() * 14) + 's';
+    d.style.animationDelay = (-Math.random() * 12) + 's';
+    box.appendChild(d);
+  }
+})();
+
+const KB = ['kb-a','kb-b','kb-c','kb-d'];
+let activeBeat = -1;
+
+function triggerAt(el){
+  if(el.dataset.w !== undefined) return WORDS[+el.dataset.w][1] + (+el.dataset.t || 0);
+  return CUES[+el.dataset.c || 0].s + (+el.dataset.t || 0);
+}
+function setBeat(t){
+  let idx = 0;
+  for(let i = 0; i < BEATS.length; i++){ if(t >= beatTime(BEATS[i])[0]) idx = i; }
+  if(idx === activeBeat) return;
+  const old = activeBeat >= 0 ? $('beat-' + activeBeat) : null;
+  if(old){ old.classList.remove('active'); old.classList.add('leaving');
+    setTimeout(() => old.classList.remove('leaving'), 450); }
+  activeBeat = idx;
+  const el = $('beat-' + idx);
+  el.querySelectorAll('.el').forEach(x => {
+    x.classList.remove('shown');
+    if(x.dataset.count) x.textContent = '0';
+  });
+  el.classList.add('active');
+  $('bg').className = KB[idx % KB.length];
+}
+function tickBeat(){
+  if(activeBeat < 0) return;
+  const t = audio.currentTime || 0;
+  const el = $('beat-' + activeBeat);
+  el.querySelectorAll('.el:not(.shown)').forEach(x => {
+    if(t >= triggerAt(x)){
+      x.classList.add('shown');
+      if(x.dataset.count) countUp(x, +x.dataset.count);
+    }
+  });
+}
+function countUp(el, target){
+  const t0 = performance.now(), dur = 1500;
+  (function step(now){
+    const p = Math.min(1, (now - t0) / dur);
+    el.textContent = Math.floor(target * (1 - Math.pow(1 - p, 3))).toLocaleString('en-US');
+    if(p < 1) requestAnimationFrame(step);
+    else el.textContent = target.toLocaleString('en-US');
+  })(performance.now());
+}
+
+function fmt(s){
+  s = Math.max(0, Math.floor(s));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+function updateUI(t){
+  const dur = audio.duration || DATA.duration;
+  trackFill.style.width = Math.min(100, (t / dur) * 100) + '%';
+  timeEl.textContent = fmt(t) + ' / ' + fmt(dur);
+}
+function play(){ audio.play().then(() => { $('btnPlay').textContent = '⏸'; }).catch(e => showErr('audio: ' + e.message)); }
+function pause(){ audio.pause(); $('btnPlay').textContent = '▶'; }
+function toggle(){ audio.paused ? play() : pause(); }
+function restart(){
+  audio.currentTime = 0; activeBeat = -1;
+  endOverlay.classList.add('hidden'); play();
+}
+
+$('btnStart').addEventListener('click', () => { startOverlay.classList.add('hidden'); play(); });
+$('btnAgain').addEventListener('click', restart);
+$('btnPlay').addEventListener('click', toggle);
+$('btnReplay').addEventListener('click', restart);
+$('btnMute').addEventListener('click', () => {
+  audio.muted = !audio.muted;
+  $('btnMute').textContent = audio.muted ? '🔇' : '🔊';
+});
+
+function seekFromEvent(e){
+  const r = $('track').getBoundingClientRect();
+  const p = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  audio.currentTime = p * (audio.duration || DATA.duration);
+  activeBeat = -1;
+}
+$('track').addEventListener('mousedown', (e) => {
+  seekFromEvent(e);
+  const mv = (ev) => seekFromEvent(ev);
+  const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); };
+  addEventListener('mousemove', mv); addEventListener('mouseup', up);
+});
+stageArea.addEventListener('click', (e) => {
+  if(e.target.closest('.overlay') || e.target.closest('button')) return;
+  toggle();
+});
+addEventListener('keydown', (e) => {
+  if(e.code === 'Space'){ e.preventDefault(); toggle(); }
+  if(e.code === 'ArrowRight') audio.currentTime = Math.min((audio.duration || DATA.duration), audio.currentTime + 5);
+  if(e.code === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
+  if(e.key === 'r' || e.key === 'R') restart();
+});
+
+function frame(){
+  const t = audio.currentTime || 0;
+  setBeat(t); tickBeat(); updateUI(t);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* audio path: works from FinalOutput/ (JWTAudio.mp3) and repo root (news/JWTAudio.mp3) */
+let audioFallback = false;
+audio.addEventListener('error', () => {
+  if(!audioFallback){
+    audioFallback = true;
+    audio.src = 'news/JWTAudio.mp3';
+    audio.load();
+  } else {
+    showErr('⚠ audio load হয়নি');
+  }
+});
+audio.addEventListener('ended', () => {
+  $('btnPlay').textContent = '▶';
+  endOverlay.classList.remove('hidden');
+});
+function showErr(m){ errBox.textContent = m; errBox.style.display = 'block'; }
+
+setBeat(0); tickBeat(); updateUI(0);
+</script>
+</body>
+</html>
